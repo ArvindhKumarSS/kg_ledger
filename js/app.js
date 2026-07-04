@@ -12,7 +12,11 @@ import {
   extractStatementSnapshot,
   updateAccountBalance,
 } from './ledger-store.js';
-import { formatAmount, formatDisplayDate, previousMonth, escapeHtml } from './utils.js';
+import { formatAmount, formatDisplayDate, previousMonth, escapeHtml, getCookie, setCookie } from './utils.js';
+
+const COOKIE_OWNER = 'kg_gh_owner';
+const COOKIE_REPO = 'kg_gh_repo';
+const COOKIE_TOKEN = 'kg_gh_token';
 
 // pdf.js from CDN
 const pdfjsLib = await import('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.min.mjs');
@@ -32,16 +36,35 @@ function $(sel) {
 
 function loadSettings() {
   return {
-    owner: sessionStorage.getItem('gh-owner') || '',
-    repo: sessionStorage.getItem('gh-repo') || 'kg_ledger',
-    token: sessionStorage.getItem('gh-token') || '',
+    owner: getCookie(COOKIE_OWNER) || '',
+    repo: getCookie(COOKIE_REPO) || 'kg_ledger',
+    token: getCookie(COOKIE_TOKEN) || '',
   };
 }
 
-function saveSettings(owner, repo, token) {
-  sessionStorage.setItem('gh-owner', owner);
-  sessionStorage.setItem('gh-repo', repo);
-  sessionStorage.setItem('gh-token', token);
+function saveSettings(owner, repo, tokenInput) {
+  const existing = loadSettings();
+  const token = tokenInput || existing.token;
+  if (!owner || !repo) throw new Error('GitHub username and repository are required');
+  if (!token) throw new Error('Personal Access Token is required');
+  setCookie(COOKIE_OWNER, owner);
+  setCookie(COOKIE_REPO, repo);
+  setCookie(COOKIE_TOKEN, token);
+}
+
+function hasGitHubSettings() {
+  const s = loadSettings();
+  return Boolean(s.token && s.owner && s.repo);
+}
+
+function ensureGitHubSettings() {
+  if (hasGitHubSettings()) return true;
+  switchTab('settings');
+  $('#settings-status').innerHTML =
+    '<span class="alert alert-warn" style="display:inline-block;margin-top:0.5rem">Enter GitHub username, repository, and PAT below before saving.</span>';
+  $('#gh-token').focus();
+  alert('Please configure GitHub settings (username, repository, and PAT) before saving to GitHub.');
+  return false;
 }
 
 function getBaseUrl() {
@@ -217,6 +240,8 @@ async function handlePdf(file) {
 }
 
 async function handleCommit() {
+  if (!ensureGitHubSettings()) return;
+
   const month = $('#statement-month').value;
   if (!month) {
     alert('Select a statement month');
@@ -372,6 +397,8 @@ function renderSettingsTags() {
 }
 
 async function saveConfigToGitHub() {
+  if (!ensureGitHubSettings()) return;
+
   $('#settings-status').textContent = 'Saving…';
   try {
     const files = buildCommitFiles(state.data, null);
@@ -393,11 +420,25 @@ function initSettings() {
   const s = loadSettings();
   $('#gh-owner').value = s.owner || detected?.owner || '';
   $('#gh-repo').value = s.repo || detected?.repo || 'kg_ledger';
-  $('#gh-token').value = s.token;
+  $('#gh-token').value = '';
+  $('#gh-token').placeholder = s.token
+    ? 'Token saved in cookie — leave blank to keep, or enter new'
+    : 'ghp_...';
 
   $('#save-settings-btn').addEventListener('click', () => {
-    saveSettings($('#gh-owner').value.trim(), $('#gh-repo').value.trim(), $('#gh-token').value.trim());
-    $('#settings-status').textContent = 'Settings saved for this session';
+    try {
+      saveSettings(
+        $('#gh-owner').value.trim(),
+        $('#gh-repo').value.trim(),
+        $('#gh-token').value.trim()
+      );
+      $('#gh-token').value = '';
+      $('#gh-token').placeholder = 'Token saved in cookie — leave blank to keep, or enter new';
+      $('#settings-status').innerHTML =
+        '<span class="alert alert-success" style="display:inline-block;margin-top:0.5rem">Settings saved in browser cookie (365 days).</span>';
+    } catch (e) {
+      $('#settings-status').innerHTML = `<span class="alert alert-error" style="display:inline-block;margin-top:0.5rem">${escapeHtml(e.message)}</span>`;
+    }
   });
 
   $('#add-apt-btn').addEventListener('click', () => {

@@ -60,3 +60,24 @@ export function escapeHtml(str) {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
 }
+
+const COOKIE_DAYS = 365;
+
+function cookieAttrs() {
+  const base = 'path=/;SameSite=Strict';
+  return location.protocol === 'https:' ? `${base};Secure` : base;
+}
+
+export function setCookie(name, value, days = COOKIE_DAYS) {
+  const expires = new Date(Date.now() + days * 864e5).toUTCString();
+  document.cookie = `${name}=${encodeURIComponent(value)};expires=${expires};${cookieAttrs()}`;
+}
+
+export function getCookie(name) {
+  const match = document.cookie.match(new RegExp(`(?:^|; )${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}=([^;]*)`));
+  return match ? decodeURIComponent(match[1]) : '';
+}
+
+export function deleteCookie(name) {
+  document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;${cookieAttrs()}`;
+}

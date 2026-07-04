@@ -35,7 +35,7 @@ git push -u origin main
 - GitHub **Settings → Developer settings → Personal access tokens → Fine-grained tokens**
 - Repository access: only `kg_ledger`
 - Permissions: **Contents: Read and write**
-- Copy the token — you'll enter it in the app's Settings tab (stored in browser session only)
+- Copy the token — enter it in **Settings**; it is saved in a browser cookie on your device (365 days)
 
 ## Monthly workflow
 
