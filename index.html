@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KG Srivatsa Garden — Maintenance Ledger</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <header>
+    <h1 id="complex-name">KG Srivatsa Garden — Maintenance Ledger</h1>
+    <p>Upload monthly IOB bank statements · Auto-map payments to apartments</p>
+  </header>
+
+  <nav>
+    <button class="tab active" data-tab="upload">Upload</button>
+    <button class="tab" data-tab="browse">Browse Ledgers</button>
+    <button class="tab" data-tab="settings">Settings</button>
+  </nav>
+
+  <main>
+    <!-- Upload panel -->
+    <section id="panel-upload" class="panel active">
+      <h2>Upload Bank Statement</h2>
+      <div class="form-row">
+        <label>
+          Statement month
+          <input type="month" id="statement-month">
+        </label>
+      </div>
+      <div class="drop-zone" id="drop-zone">
+        <input type="file" id="pdf-input" accept=".pdf">
+        <p>Drop IOB statement PDF here or click to browse</p>
+      </div>
+      <div id="parse-status"></div>
+      <div id="review-section" class="hidden">
+        <div class="summary-grid" id="summary-grid"></div>
+        <details class="warnings hidden" id="warnings-box">
+          <summary>Parse warnings</summary>
+          <ul id="warnings-list"></ul>
+        </details>
+
+        <div class="section-title">Credits — maintenance payments</div>
+        <div class="table-wrap">
+          <table id="credits-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Amount</th>
+                <th>Details</th>
+                <th>Apartment</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <div class="section-title">Debits — expenditures</div>
+        <div class="table-wrap">
+          <table id="debits-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Amount</th>
+                <th>Details</th>
+                <th>Category</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <div class="section-title">Interest credits</div>
+        <div class="table-wrap">
+          <table id="interest-table">
+            <thead>
+              <tr><th>Date</th><th>Amount</th><th>Details</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <div style="margin-top:1rem;display:flex;gap:0.75rem;align-items:center">
+          <button class="btn" id="commit-btn">Commit to GitHub</button>
+          <span id="commit-status"></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Browse panel -->
+    <section id="panel-browse" class="panel">
+      <h2>Browse Ledgers</h2>
+      <div class="form-row">
+        <label>
+          View
+          <select id="browse-view">
+            <option value="apartment">Apartment ledger</option>
+            <option value="expenditures">Expenditures</option>
+            <option value="interest">Interest</option>
+          </select>
+        </label>
+        <label id="apt-select-label">
+          Apartment
+          <select id="browse-apartment"></select>
+        </label>
+      </div>
+      <div class="table-wrap">
+        <table id="browse-table">
+          <thead id="browse-thead"></thead>
+          <tbody id="browse-tbody"></tbody>
+        </table>
+      </div>
+      <div class="status-bar" id="browse-summary"></div>
+    </section>
+
+    <!-- Settings panel -->
+    <section id="panel-settings" class="panel">
+      <h2>Settings</h2>
+
+      <div class="section-title">GitHub connection</div>
+      <div class="alert alert-info">
+        Public repo on GitHub Pages. A Personal Access Token is required only to commit changes.
+        Create a fine-grained token with <strong>Contents: Read and write</strong> for this repo.
+      </div>
+      <div class="form-row">
+        <label>
+          GitHub username
+          <input type="text" id="gh-owner" placeholder="your-username">
+        </label>
+        <label>
+          Repository name
+          <input type="text" id="gh-repo" placeholder="kg_ledger">
+        </label>
+        <label>
+          Personal Access Token
+          <input type="password" id="gh-token" placeholder="ghp_...">
+        </label>
+        <button class="btn btn-secondary" id="save-settings-btn">Save</button>
+      </div>
+
+      <div class="section-title">Apartments</div>
+      <div class="tag-list" id="apt-tags"></div>
+      <div class="form-row">
+        <label>
+          Add apartment
+          <input type="text" id="new-apt" placeholder="e.g. P2A" maxlength="6">
+        </label>
+        <button class="btn btn-secondary" id="add-apt-btn">Add</button>
+      </div>
+
+      <div class="section-title">Expense categories</div>
+      <div class="tag-list" id="cat-tags"></div>
+      <div class="form-row">
+        <label>
+          Add category
+          <input type="text" id="new-cat" placeholder="e.g. Plumbing">
+        </label>
+        <button class="btn btn-secondary" id="add-cat-btn">Add category</button>
+        <button class="btn" id="save-config-btn">Save config to GitHub</button>
+      </div>
+      <div id="settings-status"></div>
+    </section>
+  </main>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

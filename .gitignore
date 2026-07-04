@@ -1,0 +1,6 @@
+samples/*.pdf
+.DS_Store
+.cursor/
+node_modules/
+package.json
+package-lock.json
