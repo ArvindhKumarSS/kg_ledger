@@ -19,16 +19,54 @@ header {
   padding: 1rem 1.5rem;
 }
 
-header h1 {
+.header-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.header-title h1 {
   margin: 0;
   font-size: 1.25rem;
   font-weight: 600;
 }
 
-header p {
+.header-title p {
   margin: 0.25rem 0 0;
   opacity: 0.85;
   font-size: 0.875rem;
+}
+
+.account-balance {
+  text-align: right;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  padding: 0.6rem 1rem;
+  min-width: 200px;
+}
+
+.balance-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.8;
+}
+
+.balance-amount {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0.15rem 0;
+  line-height: 1.2;
+}
+
+.balance-footprint {
+  font-size: 0.75rem;
+  opacity: 0.75;
 }
 
 nav {

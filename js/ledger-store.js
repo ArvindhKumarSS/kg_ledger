@@ -84,6 +84,7 @@ export function mergeData(existing, updates) {
     accounts: { ...existing.accounts, ...updates.newMappings },
     expenditures: [...existing.expenditures, ...updates.expenditures],
     interest: [...existing.interest, ...updates.interest],
+    accountBalance: existing.accountBalance,
     ledgers: { ...existing.ledgers },
   };
 
@@ -100,6 +101,7 @@ export function buildCommitFiles(merged, uploadMeta) {
     'data/mappings/accounts.json': merged.accounts,
     'data/expenditures.json': merged.expenditures,
     'data/interest.json': merged.interest,
+    'data/account-balance.json': merged.accountBalance,
   };
 
   for (const [apt, rows] of Object.entries(merged.ledgers)) {
@@ -139,4 +141,30 @@ export function removeApartment(config, ledgers, aptId) {
   }
   config.apartments = config.apartments.filter((a) => a !== aptId);
   delete ledgers[aptId];
+}
+
+/** Closing balance and last txn date from a parsed statement */
+export function extractStatementSnapshot(transactions) {
+  const withBalance = transactions.filter((t) => t.balance != null);
+  if (!withBalance.length) return null;
+  const last = withBalance[withBalance.length - 1];
+  return {
+    balance: last.balance,
+    lastTransactionDate: last.date,
+  };
+}
+
+/** Update stored balance only if this statement is at least as recent */
+export function updateAccountBalance(current, snapshot, statementMonth) {
+  if (!snapshot) return current || { balance: null, lastTransactionDate: null, statementMonth: null, updatedAt: null };
+  const prev = current?.lastTransactionDate;
+  if (!prev || snapshot.lastTransactionDate >= prev) {
+    return {
+      balance: snapshot.balance,
+      lastTransactionDate: snapshot.lastTransactionDate,
+      statementMonth,
+      updatedAt: new Date().toISOString(),
+    };
+  }
+  return current;
 }

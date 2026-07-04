@@ -130,11 +130,17 @@ export async function loadAllData(baseUrl) {
   const accounts = (await fetchJson('data/mappings/accounts.json')) || {};
   const expenditures = (await fetchJson('data/expenditures.json')) || [];
   const interest = (await fetchJson('data/interest.json')) || [];
+  const accountBalance = (await fetchJson('data/account-balance.json')) || {
+    balance: null,
+    lastTransactionDate: null,
+    statementMonth: null,
+    updatedAt: null,
+  };
 
   const ledgers = {};
   for (const apt of config.apartments) {
     ledgers[apt] = (await fetchJson(`data/ledgers/${apt}.json`)) || [];
   }
 
-  return { config, accounts, expenditures, interest, ledgers };
+  return { config, accounts, expenditures, interest, accountBalance, ledgers };
 }

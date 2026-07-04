@@ -9,6 +9,8 @@ import {
   addApartment,
   removeApartment,
   canRemoveApartment,
+  extractStatementSnapshot,
+  updateAccountBalance,
 } from './ledger-store.js';
 import { formatAmount, formatDisplayDate, previousMonth, escapeHtml } from './utils.js';
 
@@ -56,8 +58,24 @@ async function reloadData() {
   state.data = await loadAllData(getBaseUrl());
   document.getElementById('complex-name').textContent =
     `${state.data.config.complexName} — Maintenance Ledger`;
+  renderAccountBalance();
   renderSettingsTags();
   renderBrowseApartments();
+}
+
+function renderAccountBalance() {
+  const bal = state.data?.accountBalance;
+  const amountEl = $('#balance-amount');
+  const footprintEl = $('#balance-footprint');
+
+  if (!bal?.balance) {
+    amountEl.textContent = '—';
+    footprintEl.textContent = 'No statement uploaded yet';
+    return;
+  }
+
+  amountEl.textContent = `₹ ${formatAmount(bal.balance)} Cr`;
+  footprintEl.textContent = `As of ${formatDisplayDate(bal.lastTransactionDate)}`;
 }
 
 function aptOptions(selected = '') {
@@ -220,6 +238,9 @@ async function handleCommit() {
     const updates = await buildLedgerEntries(state.classified, month, existingIds);
     const merged = mergeData(state.data, updates);
 
+    const snapshot = extractStatementSnapshot(state.classified);
+    merged.accountBalance = updateAccountBalance(state.data.accountBalance, snapshot, month);
+
     const uploadMeta = {
       uploadedAt: new Date().toISOString(),
       statementMonth: month,
@@ -233,6 +254,7 @@ async function handleCommit() {
     const sha = await client.commitFiles(`Import statement ${month}`, files);
 
     state.data = merged;
+    renderAccountBalance();
     $('#commit-status').textContent = `Committed (${sha.slice(0, 7)})`;
     alert(`Successfully imported ${updates.importedTxnIds.length} transactions.${updates.skipped.length ? ` Skipped ${updates.skipped.length} duplicates.` : ''}`);
   } catch (err) {
