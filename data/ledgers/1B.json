@@ -1,1 +1,10 @@
-[]
+[
+  {
+    "date": "2026-04-11",
+    "creditAmount": 2900,
+    "details": "UPI/610112958423/CR/Mr R S MANGALA/IDI/MAINTENAN",
+    "sourceUpload": "2026-08-09T04-03-45-492Z",
+    "txnId": "270f17e4cd122f58",
+    "mappingKey": "mr r s mangala"
+  }
+]

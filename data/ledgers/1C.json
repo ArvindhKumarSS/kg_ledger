@@ -1,1 +1,18 @@
-[]
+[
+  {
+    "date": "2026-04-03",
+    "creditAmount": 3000,
+    "details": "NEFT-HDFC-HDFCH00908980482-CHARLES V -0001",
+    "sourceUpload": "2026-08-09T04-03-45-492Z",
+    "txnId": "6c7ca9be72ecb790",
+    "mappingKey": "charles v"
+  },
+  {
+    "date": "2026-05-06",
+    "creditAmount": 3000,
+    "details": "NEFT-HDFC-HDFCH00976866003-CHARLES V -0001",
+    "sourceUpload": "2026-08-09T04-03-45-492Z",
+    "txnId": "5f035c96349b5b32",
+    "mappingKey": "charles v"
+  }
+]

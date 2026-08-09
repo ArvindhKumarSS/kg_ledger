@@ -1,1 +1,26 @@
-[]
+[
+  {
+    "date": "2026-04-05",
+    "creditAmount": 3000,
+    "details": "UPI/609528131327/CR/SRIRAM KUMAR M/ICI/Kgs 2D Mt",
+    "sourceUpload": "2026-08-09T04-03-45-492Z",
+    "txnId": "1da6f8106434f052",
+    "mappingKey": "sriram kumar m"
+  },
+  {
+    "date": "2026-05-03",
+    "creditAmount": 3000,
+    "details": "UPI/612376502390/CR/SRIRAM KUMAR M/ICI/Kgs 2D Mt",
+    "sourceUpload": "2026-08-09T04-03-45-492Z",
+    "txnId": "c7c35e0692418a61",
+    "mappingKey": "sriram kumar m"
+  },
+  {
+    "date": "2026-06-05",
+    "creditAmount": 3000,
+    "details": "UPI/615633470206/CR/SRIRAM KUMAR M/ICI/Kgs 2D",
+    "sourceUpload": "2026-08-09T04-03-45-492Z",
+    "txnId": "03150115fa9c9118",
+    "mappingKey": "sriram kumar m"
+  }
+]

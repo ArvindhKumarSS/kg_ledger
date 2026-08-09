@@ -1,1 +1,226 @@
-[]
+[
+  {
+    "date": "2026-04-02",
+    "debitAmount": 5598,
+    "details": "TO CASH M KUMARI",
+    "category": "Salaries",
+    "sourceUpload": "2026-08-09T04-03-45-492Z",
+    "txnId": "a964faad26abb4a3"
+  },
+  {
+    "date": "2026-04-02",
+    "debitAmount": 5432,
+    "details": "TO CASH MARIA SELVI",
+    "category": "Salaries",
+    "sourceUpload": "2026-08-09T04-03-45-492Z",
+    "txnId": "2bda531ba2ddf7b2"
+  },
+  {
+    "date": "2026-04-02",
+    "debitAmount": 5432,
+    "details": "TO CASH DHANAMARY CHINAPPARAJ",
+    "category": "Salaries",
+    "sourceUpload": "2026-08-09T04-03-45-492Z",
+    "txnId": "43f72e7a4dc5d1f9"
+  },
+  {
+    "date": "2026-04-04",
+    "debitAmount": 5432,
+    "details": "TO CASH S SAMANASUMARI",
+    "category": "Salaries",
+    "sourceUpload": "2026-08-09T04-03-45-492Z",
+    "txnId": "4c78563bb60fc735"
+  },
+  {
+    "date": "2026-04-08",
+    "debitAmount": 4.72,
+    "details": "Charges for PORD Customer Payment :000780187802",
+    "category": "Bank Charges",
+    "sourceUpload": "2026-08-09T04-03-45-492Z",
+    "txnId": "38a8fb3fb7c5939c"
+  },
+  {
+    "date": "2026-04-08",
+    "debitAmount": 25000,
+    "details": "NEFT-SBIN-IOBAN26098444704-PERNANDAS-",
+    "category": "",
+    "sourceUpload": "2026-08-09T04-03-45-492Z",
+    "txnId": "90dcd5af58833dd7"
+  },
+  {
+    "date": "2026-04-09",
+    "debitAmount": 70200,
+    "details": "RHINO SENTINEL AND ALLIE",
+    "category": "Security",
+    "sourceUpload": "2026-08-09T04-03-45-492Z",
+    "txnId": "d07d3d3c443c29c9"
+  },
+  {
+    "date": "2026-04-10",
+    "debitAmount": 9400,
+    "details": "VASUDEVAN N",
+    "category": "",
+    "sourceUpload": "2026-08-09T04-03-45-492Z",
+    "txnId": "16e46403cd8cb982"
+  },
+  {
+    "date": "2026-04-15",
+    "debitAmount": 4.72,
+    "details": "Charges for PORD Customer Payment :000780753109",
+    "category": "Bank Charges",
+    "sourceUpload": "2026-08-09T04-03-45-492Z",
+    "txnId": "61ed18906b8ae280"
+  },
+  {
+    "date": "2026-04-15",
+    "debitAmount": 25000,
+    "details": "NEFT-SBIN-IOBAN26105280515-FERNANDAS-",
+    "category": "",
+    "sourceUpload": "2026-08-09T04-03-45-492Z",
+    "txnId": "5f81ba6d0ffaf229"
+  },
+  {
+    "date": "2026-04-16",
+    "debitAmount": 3800,
+    "details": "S RAGHU",
+    "category": "",
+    "sourceUpload": "2026-08-09T04-03-45-492Z",
+    "txnId": "89e17b4051fd9a34"
+  },
+  {
+    "date": "2026-04-16",
+    "debitAmount": 11700,
+    "details": "S RAGHU",
+    "category": "",
+    "sourceUpload": "2026-08-09T04-03-45-492Z",
+    "txnId": "2ebc30601e5d5b9a"
+  },
+  {
+    "date": "2026-04-16",
+    "debitAmount": 2940,
+    "details": "PRAJUSH V",
+    "category": "",
+    "sourceUpload": "2026-08-09T04-03-45-492Z",
+    "txnId": "08991e4852f56272"
+  },
+  {
+    "date": "2026-04-18",
+    "debitAmount": 4.72,
+    "details": "Charges for PORD Customer Payment :000781083290",
+    "category": "Bank Charges",
+    "sourceUpload": "2026-08-09T04-03-45-492Z",
+    "txnId": "d4da64844e5a6417"
+  },
+  {
+    "date": "2026-04-18",
+    "debitAmount": 15000,
+    "details": "NEFT-SBIN-IOBAN26108591850-FERNANDAS-",
+    "category": "",
+    "sourceUpload": "2026-08-09T04-03-45-492Z",
+    "txnId": "0010acbf5ad2589e"
+  },
+  {
+    "date": "2026-04-18",
+    "debitAmount": 16350,
+    "details": "VASUDEVAN N",
+    "category": "",
+    "sourceUpload": "2026-08-09T04-03-45-492Z",
+    "txnId": "07e208189a14a8bc"
+  },
+  {
+    "date": "2026-04-21",
+    "debitAmount": 2536,
+    "details": "S STALIN SUNDARSINH",
+    "category": "",
+    "sourceUpload": "2026-08-09T04-03-45-492Z",
+    "txnId": "aaac68fdee4b60d9"
+  },
+  {
+    "date": "2026-04-21",
+    "debitAmount": 78260,
+    "details": "GENERATOR CARE",
+    "category": "Generator",
+    "sourceUpload": "2026-08-09T04-03-45-492Z",
+    "txnId": "e07fa60bb762c1de"
+  },
+  {
+    "date": "2026-05-02",
+    "debitAmount": 12000,
+    "details": "AROKIASAMY",
+    "category": "",
+    "sourceUpload": "2026-08-09T04-03-45-492Z",
+    "txnId": "3e54f62e13d5eb5c"
+  },
+  {
+    "date": "2026-05-04",
+    "debitAmount": 53370,
+    "details": "V VINOTH KUMAR",
+    "category": "",
+    "sourceUpload": "2026-08-09T04-03-45-492Z",
+    "txnId": "11969bd741a4395f"
+  },
+  {
+    "date": "2026-05-04",
+    "debitAmount": 9100,
+    "details": "`SENTHILKUMARMANOKARAN",
+    "category": "",
+    "sourceUpload": "2026-08-09T04-03-45-492Z",
+    "txnId": "b89a6c1086159abb"
+  },
+  {
+    "date": "2026-05-04",
+    "debitAmount": 35000,
+    "details": "MKARTHIK",
+    "category": "",
+    "sourceUpload": "2026-08-09T04-03-45-492Z",
+    "txnId": "218836f2677f6581"
+  },
+  {
+    "date": "2026-05-04",
+    "debitAmount": 6742,
+    "details": "SASI AJIT",
+    "category": "",
+    "sourceUpload": "2026-08-09T04-03-45-492Z",
+    "txnId": "44217f737a9e9973"
+  },
+  {
+    "date": "2026-05-06",
+    "debitAmount": 70014,
+    "details": "RHINO SENTINEL AND ALLIE",
+    "category": "Security",
+    "sourceUpload": "2026-08-09T04-03-45-492Z",
+    "txnId": "c79902787694d577"
+  },
+  {
+    "date": "2026-05-12",
+    "debitAmount": 2832,
+    "details": "UNIQUE PUMP SOLUTION PVT",
+    "category": "",
+    "sourceUpload": "2026-08-09T04-03-45-492Z",
+    "txnId": "fece432bc97b6702"
+  },
+  {
+    "date": "2026-05-23",
+    "debitAmount": 138.35,
+    "details": "CHRGS- SMS ALERT JAN TO MAR 2026",
+    "category": "Bank Charges",
+    "sourceUpload": "2026-08-09T04-03-45-492Z",
+    "txnId": "eb80abb9e3284b63"
+  },
+  {
+    "date": "2026-06-02",
+    "debitAmount": 59,
+    "details": "Cheque book Issue Charges",
+    "category": "Bank Charges",
+    "sourceUpload": "2026-08-09T04-03-45-492Z",
+    "txnId": "17aa4991322228f8"
+  },
+  {
+    "date": "2026-06-03",
+    "debitAmount": 59,
+    "details": "PCBHomeDeliveryChrgs",
+    "category": "Bank Charges",
+    "sourceUpload": "2026-08-09T04-03-45-492Z",
+    "txnId": "3a15b78fb32e3c5a"
+  }
+]

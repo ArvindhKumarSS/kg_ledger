@@ -1,1 +1,10 @@
-[]
+[
+  {
+    "date": "2026-04-04",
+    "creditAmount": 3000,
+    "details": "IMPS/609421358187/RAMESHK/FDRL/XXXXXX8090/3C",
+    "sourceUpload": "2026-08-09T04-03-45-492Z",
+    "txnId": "aa304ef8139d02dd",
+    "mappingKey": "rameshk fdrl"
+  }
+]

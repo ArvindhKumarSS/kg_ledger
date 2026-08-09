@@ -1,1 +1,18 @@
-[]
+[
+  {
+    "date": "2026-04-24",
+    "creditAmount": 4795,
+    "details": "IMPS/611414629210/SHANKAR/ICIC/XXXXXX9845/5A",
+    "sourceUpload": "2026-08-09T04-03-45-492Z",
+    "txnId": "f9df785bc4d00cc2",
+    "mappingKey": "shankar icic"
+  },
+  {
+    "date": "2026-05-27",
+    "creditAmount": 4795,
+    "details": "IMPS/614719387310/SHANKAR/ICIC/XXXXXX9845/5A",
+    "sourceUpload": "2026-08-09T04-03-45-492Z",
+    "txnId": "fc7051a89a2b50fb",
+    "mappingKey": "shankar icic"
+  }
+]
