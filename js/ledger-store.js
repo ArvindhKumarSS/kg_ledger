@@ -1,6 +1,20 @@
 /** Ledger merge, dedup, and data operations */
 
+import { extractMappingKey } from './classifier.js';
 import { hashTxnId } from './utils.js';
+
+function isApartmentCredit(txn) {
+  return (
+    (txn.txnType === 'credit' || txn.txnType === 'bulk_cash') &&
+    txn.creditAmount &&
+    txn.apartment
+  );
+}
+
+/** Persist payer→apartment for normal credits; skip generic bulk-cash keys */
+function shouldPersistMapping(txn) {
+  return txn.txnType === 'credit' && Boolean(txn.mappingKey && txn.apartment);
+}
 
 export async function makeTxnId(txn) {
   const amount = txn.creditAmount || txn.debitAmount || 0;
@@ -17,9 +31,20 @@ export function collectExistingTxnIds(data) {
   return ids;
 }
 
+function rememberApartmentTag(txn, txnId, newMappings, relocations) {
+  if (!isApartmentCredit(txn)) return;
+  const mappingKey = txn.mappingKey || extractMappingKey(txn.details);
+  if (shouldPersistMapping(txn)) {
+    newMappings[txn.mappingKey] = txn.apartment;
+  }
+  // Exact txn placement (covers bulk cash and retags on re-upload)
+  relocations.push({ txnId, apartment: txn.apartment, mappingKey });
+}
+
 export async function buildLedgerEntries(classified, sourceUpload, existingIds) {
   const newMappings = {};
   const ledgerUpdates = {};
+  const relocations = [];
   const expenditures = [];
   const interest = [];
   const importedTxnIds = [];
@@ -31,6 +56,8 @@ export async function buildLedgerEntries(classified, sourceUpload, existingIds) 
     const txnId = await makeTxnId(txn);
     if (existingIds.has(txnId)) {
       skipped.push(txn);
+      // Duplicates are not re-imported, but tags still update mappings + placement
+      rememberApartmentTag(txn, txnId, newMappings, relocations);
       continue;
     }
 
@@ -46,7 +73,8 @@ export async function buildLedgerEntries(classified, sourceUpload, existingIds) 
       continue;
     }
 
-    if (txn.txnType === 'credit' && txn.creditAmount && txn.apartment) {
+    if (isApartmentCredit(txn)) {
+      const mappingKey = txn.mappingKey || extractMappingKey(txn.details);
       if (!ledgerUpdates[txn.apartment]) ledgerUpdates[txn.apartment] = [];
       ledgerUpdates[txn.apartment].push({
         date: txn.date,
@@ -54,8 +82,9 @@ export async function buildLedgerEntries(classified, sourceUpload, existingIds) 
         details: txn.details,
         sourceUpload,
         txnId,
+        mappingKey,
       });
-      if (txn.mappingKey && txn.apartment) {
+      if (shouldPersistMapping(txn)) {
         newMappings[txn.mappingKey] = txn.apartment;
       }
       importedTxnIds.push(txnId);
@@ -75,7 +104,98 @@ export async function buildLedgerEntries(classified, sourceUpload, existingIds) 
     }
   }
 
-  return { newMappings, ledgerUpdates, expenditures, interest, importedTxnIds, skipped };
+  return {
+    newMappings,
+    ledgerUpdates,
+    relocations,
+    expenditures,
+    interest,
+    importedTxnIds,
+    skipped,
+  };
+}
+
+function entryMappingKey(row) {
+  return row.mappingKey || extractMappingKey(row.details || '');
+}
+
+function sortLedgerRows(rows) {
+  return [...rows].sort((a, b) => {
+    if (a.date !== b.date) return a.date < b.date ? -1 : 1;
+    return (a.txnId || '').localeCompare(b.txnId || '');
+  });
+}
+
+/**
+ * Place specific transactions under the apartment chosen in review.
+ * Used when re-uploading (dups) or for bulk cash that has no shared payer map.
+ */
+export function applyTxnRelocations(ledgers, relocations) {
+  if (!relocations?.length) return ledgers;
+
+  const byId = new Map();
+  for (const move of relocations) {
+    if (move?.txnId && move?.apartment) {
+      byId.set(move.txnId, move);
+    }
+  }
+  if (!byId.size) return ledgers;
+
+  const next = {};
+  for (const apt of Object.keys(ledgers || {})) next[apt] = [];
+
+  for (const [apt, rows] of Object.entries(ledgers || {})) {
+    for (const row of rows) {
+      const move = row.txnId ? byId.get(row.txnId) : null;
+      const target = move?.apartment || apt;
+      if (!next[target]) next[target] = [];
+      next[target].push(
+        move
+          ? {
+              ...row,
+              mappingKey: move.mappingKey || row.mappingKey || entryMappingKey(row),
+            }
+          : row
+      );
+    }
+  }
+
+  for (const apt of Object.keys(next)) {
+    next[apt] = sortLedgerRows(next[apt]);
+  }
+  return next;
+}
+
+/**
+ * Move existing apartment credits to match accounts.json mappings.
+ * Applies to past rows (by mappingKey/details) so a new tag updates history.
+ */
+export function reapplyAccountMappings(ledgers, accounts, apartments = null) {
+  const aptSet = apartments ? new Set(apartments) : null;
+  const next = {};
+  for (const apt of Object.keys(ledgers || {})) {
+    next[apt] = [];
+  }
+
+  for (const [apt, rows] of Object.entries(ledgers || {})) {
+    for (const row of rows) {
+      const key = entryMappingKey(row);
+      // Bulk cash is tagged per deposit — do not move via shared payer maps
+      const bulkCash = /^BY CASH KG SRIVATSA/i.test(row.details || '');
+      const mapped = !bulkCash && key ? accounts[key] : null;
+      const target =
+        mapped && (!aptSet || aptSet.has(mapped)) ? mapped : apt;
+
+      if (!next[target]) next[target] = [];
+      const stored = { ...row, mappingKey: key || row.mappingKey };
+      next[target].push(stored);
+    }
+  }
+
+  for (const apt of Object.keys(next)) {
+    next[apt] = sortLedgerRows(next[apt]);
+  }
+  return next;
 }
 
 export function mergeData(existing, updates) {
@@ -91,6 +211,16 @@ export function mergeData(existing, updates) {
   for (const [apt, rows] of Object.entries(updates.ledgerUpdates)) {
     merged.ledgers[apt] = [...(merged.ledgers[apt] || []), ...rows];
   }
+
+  // Exact tags from this review (incl. bulk cash / retags on duplicate upload)
+  merged.ledgers = applyTxnRelocations(merged.ledgers, updates.relocations || []);
+
+  // Payer mappings update past + future for normal maintenance credits
+  merged.ledgers = reapplyAccountMappings(
+    merged.ledgers,
+    merged.accounts,
+    merged.config.apartments
+  );
 
   return merged;
 }
@@ -109,7 +239,10 @@ export function buildCommitFiles(merged, uploadMeta) {
   }
 
   if (uploadMeta) {
-    files[`data/uploads/${uploadMeta.statementMonth}.json`] = uploadMeta;
+    const uploadKey = uploadMeta.uploadId || uploadMeta.statementMonth;
+    if (uploadKey) {
+      files[`data/uploads/${uploadKey}.json`] = uploadMeta;
+    }
   }
 
   return files;

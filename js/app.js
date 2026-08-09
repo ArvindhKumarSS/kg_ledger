@@ -12,7 +12,7 @@ import {
   extractStatementSnapshot,
   updateAccountBalance,
 } from './ledger-store.js';
-import { formatAmount, formatDisplayDate, previousMonth, escapeHtml, getCookie, setCookie } from './utils.js';
+import { formatAmount, formatDisplayDate, escapeHtml, getCookie, setCookie } from './utils.js';
 
 const COOKIE_OWNER = 'kg_gh_owner';
 const COOKIE_REPO = 'kg_gh_repo';
@@ -239,14 +239,23 @@ async function handlePdf(file) {
   }
 }
 
+function buildUploadId(month) {
+  if (month) return month;
+  // Ad-hoc uploads: unique id so re-uploads never clobber prior audit files
+  return new Date().toISOString().replace(/[:.]/g, '-');
+}
+
 async function handleCommit() {
   if (!ensureGitHubSettings()) return;
 
-  const month = $('#statement-month').value;
-  if (!month) {
-    alert('Select a statement month');
+  if (!state.classified.length) {
+    alert('Parse a statement before committing');
     return;
   }
+
+  const month = $('#statement-month').value || '';
+  const uploadId = buildUploadId(month);
+  const sourceUpload = month || uploadId;
 
   const unmapped = state.classified.filter(
     (t) => (t.txnType === 'credit' || t.txnType === 'bulk_cash') && !t.skip && !t.apartment
@@ -260,28 +269,38 @@ async function handleCommit() {
 
   try {
     const existingIds = collectExistingTxnIds(state.data);
-    const updates = await buildLedgerEntries(state.classified, month, existingIds);
+    const updates = await buildLedgerEntries(state.classified, sourceUpload, existingIds);
     const merged = mergeData(state.data, updates);
 
     const snapshot = extractStatementSnapshot(state.classified);
-    merged.accountBalance = updateAccountBalance(state.data.accountBalance, snapshot, month);
+    merged.accountBalance = updateAccountBalance(
+      state.data.accountBalance,
+      snapshot,
+      month || sourceUpload
+    );
 
     const uploadMeta = {
       uploadedAt: new Date().toISOString(),
-      statementMonth: month,
+      uploadId,
+      statementMonth: month || null,
       fileName: state.fileName,
       transactionCount: updates.importedTxnIds.length,
       importedTxnIds: updates.importedTxnIds,
+      skippedDuplicates: updates.skipped.length,
     };
 
     const files = buildCommitFiles(merged, uploadMeta);
     const client = ghClient();
-    const sha = await client.commitFiles(`Import statement ${month}`, files);
+    const label = month || state.fileName || uploadId;
+    const sha = await client.commitFiles(`Import statement ${label}`, files);
 
     state.data = merged;
     renderAccountBalance();
     $('#commit-status').textContent = `Committed (${sha.slice(0, 7)})`;
-    alert(`Successfully imported ${updates.importedTxnIds.length} transactions.${updates.skipped.length ? ` Skipped ${updates.skipped.length} duplicates.` : ''}`);
+    const dupNote = updates.skipped.length
+      ? ` ${updates.skipped.length} duplicate(s) ignored.`
+      : '';
+    alert(`Successfully imported ${updates.importedTxnIds.length} transactions.${dupNote}`);
   } catch (err) {
     $('#commit-status').textContent = '';
     alert(`Commit failed: ${err.message}`);
@@ -466,7 +485,8 @@ function initSettings() {
 }
 
 function initUpload() {
-  $('#statement-month').value = previousMonth();
+  // Optional label only — uploads are ad-hoc and deduped by txn hash
+  $('#statement-month').value = '';
 
   const dropZone = $('#drop-zone');
   const input = $('#pdf-input');
