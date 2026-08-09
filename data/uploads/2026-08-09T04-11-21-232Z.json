@@ -1,0 +1,19 @@
+{
+  "uploadedAt": "2026-08-09T04:11:26.938Z",
+  "uploadId": "2026-08-09T04-11-21-232Z",
+  "statementMonth": null,
+  "fileName": "3443 statement (1).pdf",
+  "transactionCount": 7,
+  "importedTxnIds": [
+    "aaa21e118dd2a2a2",
+    "be7a315b0619550d",
+    "7e4775526df4cb27",
+    "e4f7e7bb7a38aec4",
+    "49f8f2d0ce034550",
+    "15ecbab668789983",
+    "3c4a90b0c125b3c1"
+  ],
+  "skippedDuplicates": 48,
+  "pendingCreditsAdded": 36,
+  "pendingCreditsTotal": 36
+}
