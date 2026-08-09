@@ -37,15 +37,17 @@ git push -u origin main
 - Permissions: **Contents: Read and write**
 - Copy the token — enter it in **Settings**; it is saved in a browser cookie on your device (365 days)
 
-## Monthly workflow
+## Upload workflow
 
-1. On the 1st, download the previous month's IOB statement PDF
+1. Download an IOB statement PDF (any period — uploads are ad-hoc)
 2. Open the GitHub Pages site
 3. Go to **Settings**, enter your GitHub username, repo name, and PAT
-4. Go to **Upload**, select the statement month, drop the PDF
-5. Review auto-mapped credits; tag any unmapped payers to apartments
+4. Go to **Upload**, optionally label the statement month, drop the PDF
+5. Review auto-mapped credits; tag any unmapped payers (or bulk cash) to apartments
 6. Assign categories to debits if needed
 7. Click **Commit to GitHub**
+
+Transactions are stored by content hash (`date|amount|details|cheque`). Re-uploading the same statement (or overlapping statements) silently ignores duplicates and merges new rows. Tagging a payer to an apartment updates `mappings/accounts.json`, moves matching past ledger rows, and auto-maps future imports.
 
 ## Local development
 
@@ -65,7 +67,7 @@ data/
 ├── ledgers/1A.json …        # One file per apartment
 ├── expenditures.json
 ├── interest.json
-└── uploads/YYYY-MM.json     # Import audit log
+└── uploads/<id>.json        # Import audit log (month label or timestamp)
 ```
 
 ## Apartments
