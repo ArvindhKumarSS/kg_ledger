@@ -410,3 +410,85 @@ export function updateAccountBalance(current, snapshot, statementMonth) {
   }
   return current;
 }
+
+/**
+ * All unique committed transactions for the read-only Transactions tab.
+ * Includes apartment credits, expenditures, interest, and still-pending credits.
+ */
+export function collectAllTransactions(data) {
+  const byId = new Map();
+
+  for (const [apt, rows] of Object.entries(data?.ledgers || {})) {
+    for (const row of rows || []) {
+      if (!row?.txnId) continue;
+      byId.set(row.txnId, {
+        txnId: row.txnId,
+        date: row.date,
+        type: 'credit',
+        creditAmount: row.creditAmount ?? null,
+        debitAmount: null,
+        details: row.details || '',
+        apartment: apt,
+        category: '',
+        status: 'Mapped',
+        sourceUpload: row.sourceUpload || '',
+      });
+    }
+  }
+
+  for (const row of data?.expenditures || []) {
+    if (!row?.txnId) continue;
+    byId.set(row.txnId, {
+      txnId: row.txnId,
+      date: row.date,
+      type: 'debit',
+      creditAmount: null,
+      debitAmount: row.debitAmount ?? null,
+      details: row.details || '',
+      apartment: '',
+      category: row.category || '',
+      status: 'Imported',
+      sourceUpload: row.sourceUpload || '',
+    });
+  }
+
+  for (const row of data?.interest || []) {
+    if (!row?.txnId) continue;
+    byId.set(row.txnId, {
+      txnId: row.txnId,
+      date: row.date,
+      type: 'interest',
+      creditAmount: row.creditAmount ?? null,
+      debitAmount: null,
+      details: row.details || '',
+      apartment: '',
+      category: 'Interest',
+      status: 'Interest',
+      sourceUpload: row.sourceUpload || '',
+    });
+  }
+
+  for (const row of data?.pendingCredits || []) {
+    if (!row?.txnId || byId.has(row.txnId)) continue;
+    byId.set(row.txnId, {
+      txnId: row.txnId,
+      date: row.date,
+      type: row.txnType === 'bulk_cash' ? 'bulk_cash' : 'credit',
+      creditAmount: row.creditAmount ?? null,
+      debitAmount: null,
+      details: row.details || '',
+      apartment: row.apartment || '',
+      category: '',
+      status: row.apartment ? 'Pending (tagged)' : 'Pending',
+      sourceUpload: row.sourceUpload || row.fileName || '',
+    });
+  }
+
+  return [...byId.values()].sort((a, b) => {
+    if (a.date !== b.date) return a.date < b.date ? -1 : 1;
+    const aAmt = a.creditAmount ?? a.debitAmount ?? 0;
+    const bAmt = b.creditAmount ?? b.debitAmount ?? 0;
+    if (aAmt !== bAmt) return aAmt - bAmt;
+    return (a.txnId || '').localeCompare(b.txnId || '');
+  });
+}

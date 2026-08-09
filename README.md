@@ -8,6 +8,8 @@ A static web app for maintaining apartment maintenance ledgers from Indian Overs
 - Auto-map credit transactions to apartments via account mapping
 - Tag unmapped payers — saved for future statements
 - Pending credits queue — untagged/skipped credits persist across uploads and reloads
+- Transactions tab — read-only cumulative unique committed transactions
+- Loads from GitHub API when a PAT is configured (avoids GitHub Pages CDN cache lag)
 - Per-apartment credit ledgers (Date, Amount, Details)
 - Expenditure ledger for debits with optional categories
 - Separate interest credit tracking

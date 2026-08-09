@@ -34,10 +34,14 @@ export class GitHubClient {
     return { content, sha: data.sha };
   }
 
-  async getFileRaw(path) {
-    const res = await fetch(`${API}/repos/${this.owner}/${this.repo}/contents/${path}`, {
-      headers: this.headers(),
-    });
+  async getFileRaw(path, branch = 'main') {
+    const res = await fetch(
+      `${API}/repos/${this.owner}/${this.repo}/contents/${path}?ref=${encodeURIComponent(branch)}`,
+      {
+        headers: this.headers(),
+        cache: 'no-store',
+      }
+    );
     if (res.status === 404) return null;
     if (!res.ok) throw new Error(`Failed to read ${path}`);
     const data = await res.json();
@@ -116,17 +120,60 @@ export class GitHubClient {
     }
     return null;
   }
+
+  /** Authoritative load from git (bypasses GitHub Pages CDN cache) */
+  async loadAllData(branch = 'main') {
+    const fetchJson = (path) => this.getFileRaw(path, branch);
+
+    const config = await fetchJson('data/config.json');
+    if (!config) throw new Error('data/config.json missing from repository');
+
+    const accounts = (await fetchJson('data/mappings/accounts.json')) || {};
+    const expenditures = (await fetchJson('data/expenditures.json')) || [];
+    const interest = (await fetchJson('data/interest.json')) || [];
+    const pendingCredits = (await fetchJson('data/pending-credits.json')) || [];
+    const accountBalance = (await fetchJson('data/account-balance.json')) || {
+      balance: null,
+      lastTransactionDate: null,
+      statementMonth: null,
+      updatedAt: null,
+    };
+
+    const ledgers = {};
+    await Promise.all(
+      (config.apartments || []).map(async (apt) => {
+        ledgers[apt] = (await fetchJson(`data/ledgers/${apt}.json`)) || [];
+      })
+    );
+
+    return {
+      config,
+      accounts,
+      expenditures,
+      interest,
+      accountBalance,
+      ledgers,
+      pendingCredits,
+      source: 'github-api',
+    };
+  }
 }
 
+/** Public Pages load — always bypass HTTP cache (Pages uses max-age=600) */
 export async function loadAllData(baseUrl) {
+  const root = baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`;
+  const bust = `t=${Date.now()}`;
+
   const fetchJson = async (path) => {
-    const res = await fetch(`${baseUrl}${path}`);
+    const res = await fetch(`${root}${path}?${bust}`, { cache: 'no-store' });
     if (res.status === 404) return null;
     if (!res.ok) throw new Error(`Failed to load ${path}`);
     return res.json();
   };
 
   const config = await fetchJson('data/config.json');
+  if (!config) throw new Error('Failed to load data/config.json');
+
   const accounts = (await fetchJson('data/mappings/accounts.json')) || {};
   const expenditures = (await fetchJson('data/expenditures.json')) || [];
   const interest = (await fetchJson('data/interest.json')) || [];
@@ -139,9 +186,20 @@ export async function loadAllData(baseUrl) {
   };
 
   const ledgers = {};
-  for (const apt of config.apartments) {
-    ledgers[apt] = (await fetchJson(`data/ledgers/${apt}.json`)) || [];
-  }
+  await Promise.all(
+    (config.apartments || []).map(async (apt) => {
+      ledgers[apt] = (await fetchJson(`data/ledgers/${apt}.json`)) || [];
+    })
+  );
 
-  return { config, accounts, expenditures, interest, accountBalance, ledgers, pendingCredits };
+  return {
+    config,
+    accounts,
+    expenditures,
+    interest,
+    accountBalance,
+    ledgers,
+    pendingCredits,
+    source: 'pages',
+  };
 }

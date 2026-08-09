@@ -23,6 +23,7 @@
 
   <nav>
     <button class="tab active" data-tab="upload">Upload</button>
+    <button class="tab" data-tab="transactions">Transactions</button>
     <button class="tab" data-tab="browse">Browse Ledgers</button>
     <button class="tab" data-tab="settings">Settings</button>
   </nav>
@@ -125,6 +126,44 @@
       </div>
     </section>
 
+    <!-- Transactions panel -->
+    <section id="panel-transactions" class="panel">
+      <h2>All transactions</h2>
+      <p class="muted pending-intro">
+        Read-only view of every unique committed transaction — mapped credits, expenditures, interest, and pending credits.
+      </p>
+      <div class="form-row">
+        <label>
+          Filter
+          <select id="txn-filter">
+            <option value="all">All</option>
+            <option value="credit">Credits</option>
+            <option value="debit">Debits</option>
+            <option value="interest">Interest</option>
+            <option value="pending">Pending</option>
+          </select>
+        </label>
+        <button class="btn btn-secondary" id="reload-data-btn" type="button">Reload from GitHub</button>
+      </div>
+      <div class="status-bar" id="txn-summary" style="margin-top:0;border-top:none;padding-top:0"></div>
+      <div class="table-wrap">
+        <table id="txn-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Type</th>
+              <th>Amount</th>
+              <th>Details</th>
+              <th>Apartment / Category</th>
+              <th>Status</th>
+              <th>Source</th>
+            </tr>
+          </thead>
+          <tbody id="txn-tbody"></tbody>
+        </table>
+      </div>
+    </section>
+
     <!-- Browse panel -->
     <section id="panel-browse" class="panel">
       <h2>Browse Ledgers</h2>
@@ -157,8 +196,9 @@
 
       <div class="section-title">GitHub connection</div>
       <div class="alert alert-info">
-        Public repo on GitHub Pages. A Personal Access Token is required only to commit changes.
-        Create a fine-grained token with <strong>Contents: Read and write</strong> for this repo.
+        Public repo on GitHub Pages. A Personal Access Token with <strong>Contents: Read and write</strong>
+        is required to save changes. With a token saved, this app loads data live from the GitHub API
+        (not the Pages CDN cache), so balance and pending credits survive reload immediately after commit.
         Your token is stored in a browser cookie on this device (not in git).
       </div>
       <div class="form-row">
