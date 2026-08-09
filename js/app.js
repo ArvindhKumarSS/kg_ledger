@@ -16,6 +16,7 @@ import {
   removePendingCredits,
   suggestPendingApartments,
   pendingReadyToImport,
+  collectAllTransactions,
 } from './ledger-store.js';
 import { formatAmount, formatDisplayDate, escapeHtml, getCookie, setCookie } from './utils.js';
 
@@ -73,7 +74,12 @@ function ensureGitHubSettings() {
 }
 
 function getBaseUrl() {
-  return window.location.origin + window.location.pathname.replace(/\/[^/]*$/, '/');
+  const { origin, pathname } = window.location;
+  // Always resolve the project root, even if opened as /repo or /repo/index.html
+  let path = pathname;
+  if (path.endsWith('/index.html')) path = path.slice(0, -'index.html'.length);
+  if (!path.endsWith('/')) path += '/';
+  return origin + path;
 }
 
 function ghClient() {
@@ -82,10 +88,24 @@ function ghClient() {
   return new GitHubClient(s.token, s.owner, s.repo);
 }
 
-async function reloadData() {
-  state.data = await loadAllData(getBaseUrl());
+/** Prefer GitHub API (authoritative). Pages CDN is cache-busted fallback only. */
+async function fetchLatestData({ requireApi = false } = {}) {
+  if (hasGitHubSettings()) {
+    try {
+      return await ghClient().loadAllData('main');
+    } catch (err) {
+      if (requireApi) throw err;
+      console.warn('GitHub API load failed; falling back to Pages', err);
+    }
+  } else if (requireApi) {
+    throw new Error('GitHub settings required to load authoritative data');
+  }
+  return loadAllData(getBaseUrl());
+}
+
+function applyLoadedData(data) {
+  state.data = data;
   if (!Array.isArray(state.data.pendingCredits)) state.data.pendingCredits = [];
-  // Suggest apartments from known payer maps after reload
   state.data.pendingCredits = suggestPendingApartments(
     state.data.pendingCredits,
     state.data.accounts,
@@ -97,6 +117,18 @@ async function reloadData() {
   renderPendingCredits();
   renderSettingsTags();
   renderBrowseApartments();
+  if ($('#panel-transactions')?.classList.contains('active')) renderTransactions();
+}
+
+async function reloadData({ requireApi = false } = {}) {
+  const data = await fetchLatestData({ requireApi });
+  applyLoadedData(data);
+  return data;
+}
+
+/** Refresh from git before any write so stale Pages cache cannot overwrite real data */
+async function refreshBeforeWrite() {
+  await reloadData({ requireApi: true });
 }
 
 function renderAccountBalance() {
@@ -104,14 +136,16 @@ function renderAccountBalance() {
   const amountEl = $('#balance-amount');
   const footprintEl = $('#balance-footprint');
 
-  if (!bal?.balance) {
+  if (bal?.balance == null) {
     amountEl.textContent = '—';
     footprintEl.textContent = 'No statement uploaded yet';
     return;
   }
 
   amountEl.textContent = `₹ ${formatAmount(bal.balance)} Cr`;
-  footprintEl.textContent = `As of ${formatDisplayDate(bal.lastTransactionDate)}`;
+  const asOf = bal.lastTransactionDate ? `As of ${formatDisplayDate(bal.lastTransactionDate)}` : '';
+  const src = state.data?.source === 'github-api' ? ' · live from GitHub' : '';
+  footprintEl.textContent = `${asOf}${src}`.trim();
 }
 
 function pendingRows() {
@@ -190,6 +224,70 @@ function switchTab(tab) {
   document.querySelectorAll('.panel').forEach((p) => p.classList.remove('active'));
   document.getElementById(`panel-${tab}`).classList.add('active');
   if (tab === 'browse') renderBrowse();
+  if (tab === 'transactions') renderTransactions();
+}
+
+function renderTransactions() {
+  const tbody = $('#txn-tbody');
+  const summary = $('#txn-summary');
+  if (!tbody || !summary) return;
+
+  const rows = collectAllTransactions(state.data || {});
+  const filter = ($('#txn-filter')?.value || 'all').toLowerCase();
+  const filtered =
+    filter === 'all'
+      ? rows
+      : rows.filter((r) => {
+          if (filter === 'credit') return r.type === 'credit' || r.type === 'bulk_cash';
+          if (filter === 'debit') return r.type === 'debit';
+          if (filter === 'interest') return r.type === 'interest';
+          if (filter === 'pending') return String(r.status).startsWith('Pending');
+          return true;
+        });
+
+  const credits = filtered.filter((r) => r.creditAmount != null);
+  const debits = filtered.filter((r) => r.debitAmount != null);
+  const creditTotal = credits.reduce((s, r) => s + (r.creditAmount || 0), 0);
+  const debitTotal = debits.reduce((s, r) => s + (r.debitAmount || 0), 0);
+
+  summary.textContent =
+    `${filtered.length} transaction(s)` +
+    (credits.length ? ` · credits ₹${formatAmount(creditTotal)}` : '') +
+    (debits.length ? ` · debits ₹${formatAmount(debitTotal)}` : '');
+
+  if (!filtered.length) {
+    tbody.innerHTML = '<tr><td colspan="7">No committed transactions yet</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = filtered
+    .map((r) => {
+      const amount =
+        r.debitAmount != null
+          ? `− ${formatAmount(r.debitAmount)}`
+          : formatAmount(r.creditAmount || 0);
+      const tag =
+        r.type === 'debit'
+          ? escapeHtml(r.category || '—')
+          : r.type === 'interest'
+            ? 'Interest'
+            : escapeHtml(r.apartment || '—');
+      const badgeClass = String(r.status).startsWith('Pending')
+        ? 'badge-warn'
+        : r.type === 'debit'
+          ? 'badge-info'
+          : 'badge-ok';
+      return `<tr>
+        <td>${formatDisplayDate(r.date)}</td>
+        <td>${escapeHtml(r.type)}</td>
+        <td class="amount">${amount}</td>
+        <td>${escapeHtml(r.details)}</td>
+        <td>${tag}</td>
+        <td><span class="badge ${badgeClass}">${escapeHtml(r.status)}</span></td>
+        <td>${escapeHtml(r.sourceUpload || '—')}</td>
+      </tr>`;
+    })
+    .join('');
 }
 
 function renderSummary(classified) {
@@ -343,6 +441,8 @@ async function handleCommit() {
   $('#commit-status').textContent = 'Committing…';
 
   try {
+    // Always merge against live git — never against a stale Pages-cached snapshot
+    await refreshBeforeWrite();
     const existingIds = collectExistingTxnIds(state.data);
     const updates = await buildLedgerEntries(state.classified, sourceUpload, existingIds);
 
@@ -388,9 +488,10 @@ async function handleCommit() {
     const label = month || state.fileName || uploadId;
     const sha = await client.commitFiles(`Import statement ${label}`, files);
 
-    state.data = merged;
+    state.data = { ...merged, source: 'github-api' };
     renderAccountBalance();
     renderPendingCredits();
+    renderTransactions();
     $('#commit-status').textContent = `Committed (${sha.slice(0, 7)})`;
     const dupNote = updates.skipped.length
       ? ` ${updates.skipped.length} duplicate(s) ignored.`
@@ -412,19 +513,42 @@ async function handleCommit() {
 async function handleCommitPending() {
   if (!ensureGitHubSettings()) return;
 
-  const ready = pendingReadyToImport(state.data.pendingCredits || []);
-  if (!ready.length) {
+  // Capture UI tags first — refresh replaces pending rows from git
+  const uiPending = [...(state.data.pendingCredits || [])];
+  const readyFromUi = pendingReadyToImport(uiPending);
+  if (!readyFromUi.length) {
     alert('Tag at least one pending credit with an apartment before committing.');
     return;
   }
 
-  if (!confirm(`Import ${ready.length} tagged pending credit(s) to apartment ledgers?`)) return;
+  if (!confirm(`Import ${readyFromUi.length} tagged pending credit(s) to apartment ledgers?`)) return;
 
   $('#commit-pending-btn').disabled = true;
   $('#dismiss-pending-btn').disabled = true;
   $('#pending-commit-status').textContent = 'Committing…';
 
   try {
+    await refreshBeforeWrite();
+
+    // Re-apply apartment choices from the UI onto the fresh git pending list
+    const uiById = new Map(uiPending.map((r) => [r.txnId, r]));
+    state.data.pendingCredits = (state.data.pendingCredits || []).map((row) => {
+      const ui = uiById.get(row.txnId);
+      if (!ui) return row;
+      return {
+        ...row,
+        apartment: ui.apartment || row.apartment,
+        skipped: ui.apartment ? false : row.skipped,
+        needsReview: !ui.apartment,
+      };
+    });
+
+    const ready = pendingReadyToImport(state.data.pendingCredits || []);
+    if (!ready.length) {
+      alert('No tagged pending credits found after refresh. Tag again and retry.');
+      return;
+    }
+
     const existingIds = collectExistingTxnIds(state.data);
     // Reuse ledger import path; sourceUpload kept from original statement
     const classified = ready.map((row) => ({
@@ -466,9 +590,10 @@ async function handleCommitPending() {
       files
     );
 
-    state.data = working;
+    state.data = { ...working, source: 'github-api' };
     renderAccountBalance();
     renderPendingCredits();
+    renderTransactions();
     $('#pending-commit-status').textContent = `Committed (${sha.slice(0, 7)})`;
     const dupNote = dupTotal ? ` ${dupTotal} already in ledgers (tags updated).` : '';
     alert(`Imported ${importedTotal} pending credit(s).${dupNote}`);
@@ -498,8 +623,9 @@ async function handleDismissPending() {
   $('#pending-commit-status').textContent = 'Saving…';
 
   try {
+    await refreshBeforeWrite();
     const pendingCredits = removePendingCredits(state.data.pendingCredits || [], ids);
-    const merged = { ...state.data, pendingCredits };
+    const merged = { ...state.data, pendingCredits, source: 'github-api' };
     const files = {
       'data/pending-credits.json': pendingCredits,
     };
@@ -507,6 +633,7 @@ async function handleDismissPending() {
     const sha = await client.commitFiles(`Dismiss ${ids.length} pending credit(s)`, files);
     state.data = merged;
     renderPendingCredits();
+    renderTransactions();
     $('#pending-commit-status').textContent = `Saved (${sha.slice(0, 7)})`;
   } catch (err) {
     $('#pending-commit-status').textContent = '';
@@ -628,6 +755,15 @@ async function saveConfigToGitHub() {
 
   $('#settings-status').textContent = 'Saving…';
   try {
+    // Keep local apartment/category edits; refresh other authoritative fields from git
+    const localConfig = state.data.config;
+    const localLedgers = state.data.ledgers;
+    await refreshBeforeWrite();
+    state.data.config = localConfig;
+    // Preserve any newly added empty apartment ledgers
+    for (const apt of localConfig.apartments) {
+      if (!state.data.ledgers[apt]) state.data.ledgers[apt] = localLedgers[apt] || [];
+    }
     const files = buildCommitFiles(state.data, null);
     const client = ghClient();
     await client.commitFiles('Update config', {
@@ -637,6 +773,8 @@ async function saveConfigToGitHub() {
       ),
     });
     $('#settings-status').textContent = 'Saved';
+    renderSettingsTags();
+    renderBrowseApartments();
   } catch (e) {
     $('#settings-status').textContent = `Error: ${e.message}`;
   }
@@ -652,7 +790,7 @@ function initSettings() {
     ? 'Token saved in cookie — leave blank to keep, or enter new'
     : 'ghp_...';
 
-  $('#save-settings-btn').addEventListener('click', () => {
+  $('#save-settings-btn').addEventListener('click', async () => {
     try {
       saveSettings(
         $('#gh-owner').value.trim(),
@@ -662,7 +800,10 @@ function initSettings() {
       $('#gh-token').value = '';
       $('#gh-token').placeholder = 'Token saved in cookie — leave blank to keep, or enter new';
       $('#settings-status').innerHTML =
-        '<span class="alert alert-success" style="display:inline-block;margin-top:0.5rem">Settings saved in browser cookie (365 days).</span>';
+        '<span class="alert alert-success" style="display:inline-block;margin-top:0.5rem">Settings saved. Reloading data from GitHub…</span>';
+      await reloadData({ requireApi: true });
+      $('#settings-status').innerHTML =
+        '<span class="alert alert-success" style="display:inline-block;margin-top:0.5rem">Settings saved. Live data loaded from GitHub (not Pages cache).</span>';
     } catch (e) {
       $('#settings-status').innerHTML = `<span class="alert alert-error" style="display:inline-block;margin-top:0.5rem">${escapeHtml(e.message)}</span>`;
     }
@@ -725,6 +866,22 @@ function initBrowse() {
   $('#browse-apartment').addEventListener('change', renderBrowse);
 }
 
+function initTransactions() {
+  $('#txn-filter')?.addEventListener('change', renderTransactions);
+  $('#reload-data-btn')?.addEventListener('click', async () => {
+    const btn = $('#reload-data-btn');
+    btn.disabled = true;
+    try {
+      await reloadData({ requireApi: hasGitHubSettings() });
+      renderTransactions();
+    } catch (e) {
+      alert(`Reload failed: ${e.message}`);
+    } finally {
+      btn.disabled = false;
+    }
+  });
+}
+
 document.querySelectorAll('.tab').forEach((btn) => {
   btn.addEventListener('click', () => switchTab(btn.dataset.tab));
 });
@@ -732,4 +889,10 @@ document.querySelectorAll('.tab').forEach((btn) => {
 initSettings();
 initUpload();
 initBrowse();
-await reloadData();
+initTransactions();
+try {
+  await reloadData({ requireApi: hasGitHubSettings() });
+} catch (err) {
+  console.error(err);
+  alert(`Failed to load ledger data: ${err.message}`);
+}
