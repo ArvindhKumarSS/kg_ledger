@@ -6,5 +6,13 @@
     "sourceUpload": "2026-08-09T04-03-45-492Z",
     "txnId": "ac26e17315875a55",
     "mappingKey": "t k arun net@439822"
+  },
+  {
+    "date": "2026-07-04",
+    "creditAmount": 4238,
+    "details": "NEFT-CIUB-CIUBH26185024233-ARUN T K-/ATTN/1F",
+    "sourceUpload": "2026-08-09T04-13-00-031Z",
+    "txnId": "dbdae51fd092aced",
+    "mappingKey": "arun t k attn 1f"
   }
 ]

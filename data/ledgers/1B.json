@@ -14,5 +14,29 @@
     "sourceUpload": "2026-08-09T04-11-21-232Z",
     "txnId": "e4f7e7bb7a38aec4",
     "mappingKey": "mr r s mangala"
+  },
+  {
+    "date": "2026-06-07",
+    "creditAmount": 2900,
+    "details": "UPI/615835751779/CR/Mr R S MANGALA/IDI/UPI",
+    "sourceUpload": "2026-08-09T04-13-00-031Z",
+    "txnId": "693c3a44c49ff285",
+    "mappingKey": "mr r s mangala"
+  },
+  {
+    "date": "2026-07-07",
+    "creditAmount": 3350,
+    "details": "UPI/618857779752/CR/Mr R S MANGALA/IDI/ASSOCIATI",
+    "sourceUpload": "2026-08-09T04-13-00-031Z",
+    "txnId": "01d770b12839216d",
+    "mappingKey": "mr r s mangala"
+  },
+  {
+    "date": "2026-07-07",
+    "creditAmount": 2900,
+    "details": "UPI/655424306101/CR/Mr R S MANGALA/IDI/MAINTENAN",
+    "sourceUpload": "2026-08-09T04-13-00-031Z",
+    "txnId": "2a10f0ebe0a7cb98",
+    "mappingKey": "mr r s mangala"
   }
 ]

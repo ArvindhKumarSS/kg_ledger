@@ -1,1 +1,10 @@
-[]
+[
+  {
+    "date": "2026-07-01",
+    "creditAmount": 4238,
+    "details": "IMPS/618217880511/Vijayak/SBIN/XXXXXX0961/3F fl",
+    "sourceUpload": "2026-08-09T04-13-00-031Z",
+    "txnId": "92e4671924fbe2ea",
+    "mappingKey": "vijayak sbin"
+  }
+]

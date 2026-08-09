@@ -222,5 +222,173 @@
     "category": "Bank Charges",
     "sourceUpload": "2026-08-09T04-03-45-492Z",
     "txnId": "3a15b78fb32e3c5a"
+  },
+  {
+    "date": "2026-06-08",
+    "debitAmount": 21982,
+    "details": "ARVINDH KUMAR S S",
+    "category": "",
+    "sourceUpload": "2026-08-09T04-13-00-031Z",
+    "txnId": "82e173c25b7d87d8"
+  },
+  {
+    "date": "2026-06-08",
+    "debitAmount": 69607,
+    "details": "RHINO SENTINEL AND ALLIE",
+    "category": "Security",
+    "sourceUpload": "2026-08-09T04-13-00-031Z",
+    "txnId": "e08b604ba1e079dd"
+  },
+  {
+    "date": "2026-06-09",
+    "debitAmount": 18000,
+    "details": "K R PRAKASH",
+    "category": "",
+    "sourceUpload": "2026-08-09T04-13-00-031Z",
+    "txnId": "c8f439fe82d2ffc0"
+  },
+  {
+    "date": "2026-06-09",
+    "debitAmount": 4000,
+    "details": "VASUDEVAN N",
+    "category": "",
+    "sourceUpload": "2026-08-09T04-13-00-031Z",
+    "txnId": "256d1e3402bf848a"
+  },
+  {
+    "date": "2026-06-10",
+    "debitAmount": 61724,
+    "details": "PRAKASH",
+    "category": "",
+    "sourceUpload": "2026-08-09T04-13-00-031Z",
+    "txnId": "db3fdaf217121b84"
+  },
+  {
+    "date": "2026-06-10",
+    "debitAmount": 3000,
+    "details": "AROKIASAMY",
+    "category": "",
+    "sourceUpload": "2026-08-09T04-13-00-031Z",
+    "txnId": "77d1fe44cffe0ccb"
+  },
+  {
+    "date": "2026-06-12",
+    "debitAmount": 21992,
+    "details": "GENERATOR CARE",
+    "category": "Generator",
+    "sourceUpload": "2026-08-09T04-13-00-031Z",
+    "txnId": "46e6be3e920f6e04"
+  },
+  {
+    "date": "2026-06-12",
+    "debitAmount": 142851,
+    "details": "GENERATOR CARE",
+    "category": "Generator",
+    "sourceUpload": "2026-08-09T04-13-00-031Z",
+    "txnId": "47d7a24b9b5f9331"
+  },
+  {
+    "date": "2026-06-15",
+    "debitAmount": 10000,
+    "details": "STALIN",
+    "category": "",
+    "sourceUpload": "2026-08-09T04-13-00-031Z",
+    "txnId": "639a447ccb072f93"
+  },
+  {
+    "date": "2026-06-18",
+    "debitAmount": 10000,
+    "details": "SENTHILKUMARMANOKARAN",
+    "category": "",
+    "sourceUpload": "2026-08-09T04-13-00-031Z",
+    "txnId": "9bceb4da941ffbd6"
+  },
+  {
+    "date": "2026-06-19",
+    "debitAmount": 54280,
+    "details": "P L ENTERPRISES",
+    "category": "",
+    "sourceUpload": "2026-08-09T04-13-00-031Z",
+    "txnId": "8a770eeaf133f576"
+  },
+  {
+    "date": "2026-06-19",
+    "debitAmount": 54311,
+    "details": "BINOD MISTRI SO BALESHWA",
+    "category": "",
+    "sourceUpload": "2026-08-09T04-13-00-031Z",
+    "txnId": "83f439f3b493cd3f"
+  },
+  {
+    "date": "2026-06-22",
+    "debitAmount": 11967,
+    "details": "ARVINDH KUMAR S S",
+    "category": "",
+    "sourceUpload": "2026-08-09T04-13-00-031Z",
+    "txnId": "7c4dcf6ef243d009"
+  },
+  {
+    "date": "2026-06-22",
+    "debitAmount": 26665,
+    "details": "ARVINDH KUMAR S S",
+    "category": "",
+    "sourceUpload": "2026-08-09T04-13-00-031Z",
+    "txnId": "7b53baf8c5d940c6"
+  },
+  {
+    "date": "2026-06-25",
+    "debitAmount": 236,
+    "details": "Cheque book Issue Charges",
+    "category": "Bank Charges",
+    "sourceUpload": "2026-08-09T04-13-00-031Z",
+    "txnId": "b5b55060f6c51bd4"
+  },
+  {
+    "date": "2026-06-26",
+    "debitAmount": 59,
+    "details": "PCBHomeDeliveryChrgs",
+    "category": "Bank Charges",
+    "sourceUpload": "2026-08-09T04-13-00-031Z",
+    "txnId": "d4c9636f036f521d"
+  },
+  {
+    "date": "2026-07-01",
+    "debitAmount": 40000,
+    "details": "JOHNSON LIFTS PVT LTD",
+    "category": "",
+    "sourceUpload": "2026-08-09T04-13-00-031Z",
+    "txnId": "e8800098138a89af"
+  },
+  {
+    "date": "2026-07-03",
+    "debitAmount": 130000,
+    "details": "ELITE INTEGRATED AQUA MA",
+    "category": "",
+    "sourceUpload": "2026-08-09T04-13-00-031Z",
+    "txnId": "8d3ba13333b012c3"
+  },
+  {
+    "date": "2026-07-09",
+    "debitAmount": 70200,
+    "details": "RHINO SENTINEL AND ALLIE",
+    "category": "Security",
+    "sourceUpload": "2026-08-09T04-13-00-031Z",
+    "txnId": "e4d8a56baa2dcff9"
+  },
+  {
+    "date": "2026-07-10",
+    "debitAmount": 3450,
+    "details": "RAGHU",
+    "category": "",
+    "sourceUpload": "2026-08-09T04-13-00-031Z",
+    "txnId": "f33d6f708329e162"
+  },
+  {
+    "date": "2026-07-16",
+    "debitAmount": 70000,
+    "details": "ELITE INTEGRATED AQUA MA",
+    "category": "",
+    "sourceUpload": "2026-08-09T04-13-00-031Z",
+    "txnId": "f6972f0f3fbdfb8f"
   }
 ]

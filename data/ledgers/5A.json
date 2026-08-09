@@ -22,5 +22,29 @@
     "sourceUpload": "2026-08-09T04-03-45-492Z",
     "txnId": "fc7051a89a2b50fb",
     "mappingKey": "shankar icic"
+  },
+  {
+    "date": "2026-06-05",
+    "creditAmount": 1913,
+    "details": "IMPS/615616341282/SHANKAR/ICIC/XXXXXX5255/MAINT",
+    "sourceUpload": "2026-08-09T04-13-00-031Z",
+    "txnId": "fbc08fc6210a80e6",
+    "mappingKey": "shankar icic"
+  },
+  {
+    "date": "2026-06-10",
+    "creditAmount": 9795,
+    "details": "IMPS/616108062411/SHANKAR/ICIC/XXXXXX9845/5A",
+    "sourceUpload": "2026-08-09T04-13-00-031Z",
+    "txnId": "2b58152441020c54",
+    "mappingKey": "shankar icic"
+  },
+  {
+    "date": "2026-07-02",
+    "creditAmount": 1913,
+    "details": "IMPS/618400735890/SHANKAR/ICIC/XXXXXX5255/IMPS",
+    "sourceUpload": "2026-08-09T04-13-00-031Z",
+    "txnId": "dc4283dff9f4aad9",
+    "mappingKey": "shankar icic"
   }
 ]

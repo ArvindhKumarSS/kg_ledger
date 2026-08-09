@@ -1,1 +1,10 @@
-[]
+[
+  {
+    "date": "2026-06-19",
+    "creditAmount": 100000,
+    "details": "IMPS/617035269771/SATHYAP/HDFC/XXXXXX7781/KG 5C",
+    "sourceUpload": "2026-08-09T04-13-00-031Z",
+    "txnId": "4fa83f08cfcf12d4",
+    "mappingKey": "sathyap hdfc"
+  }
+]

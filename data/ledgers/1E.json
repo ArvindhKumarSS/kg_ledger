@@ -14,5 +14,13 @@
     "sourceUpload": "2026-08-09T04-03-45-492Z",
     "txnId": "0edbc4aba8c73f07",
     "mappingKey": "j micha sbin"
+  },
+  {
+    "date": "2026-07-01",
+    "creditAmount": 3525,
+    "details": "IMPS/618209867399/J MICHA/SBIN/XXXXXX3811/1EMai",
+    "sourceUpload": "2026-08-09T04-13-00-031Z",
+    "txnId": "f02c7dfe7c5c8368",
+    "mappingKey": "j micha sbin"
   }
 ]

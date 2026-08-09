@@ -6,5 +6,13 @@
     "sourceUpload": "2026-08-09T04-03-45-492Z",
     "txnId": "a03864fe685cebb1",
     "mappingKey": "sumathi hdfc"
+  },
+  {
+    "date": "2026-07-06",
+    "creditAmount": 15039,
+    "details": "IMPS/618742850629/SUMATHI/HDFC/XXXXXX1366/3A ma",
+    "sourceUpload": "2026-08-09T04-13-00-031Z",
+    "txnId": "92ecff1ae9969667",
+    "mappingKey": "sumathi hdfc"
   }
 ]
