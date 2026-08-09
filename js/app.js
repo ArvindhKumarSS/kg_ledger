@@ -442,7 +442,22 @@ async function handleCommit() {
 
   try {
     // Always merge against live git — never against a stale Pages-cached snapshot
+    const uiPending = [...(state.data.pendingCredits || [])];
     await refreshBeforeWrite();
+    if (uiPending.length) {
+      const uiById = new Map(uiPending.map((r) => [r.txnId, r]));
+      state.data.pendingCredits = (state.data.pendingCredits || []).map((row) => {
+        const ui = uiById.get(row.txnId);
+        if (!ui?.apartment) return row;
+        return {
+          ...row,
+          apartment: ui.apartment,
+          skipped: false,
+          needsReview: false,
+        };
+      });
+    }
+
     const existingIds = collectExistingTxnIds(state.data);
     const updates = await buildLedgerEntries(state.classified, sourceUpload, existingIds);
 
