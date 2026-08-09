@@ -7,6 +7,7 @@ A static web app for maintaining apartment maintenance ledgers from Indian Overs
 - Upload IOB bank statement PDFs (parsed in browser)
 - Auto-map credit transactions to apartments via account mapping
 - Tag unmapped payers — saved for future statements
+- Pending credits queue — untagged/skipped credits persist across uploads and reloads
 - Per-apartment credit ledgers (Date, Amount, Details)
 - Expenditure ledger for debits with optional categories
 - Separate interest credit tracking
@@ -45,7 +46,9 @@ git push -u origin main
 4. Go to **Upload**, optionally label the statement month, drop the PDF
 5. Review auto-mapped credits; tag any unmapped payers (or bulk cash) to apartments
 6. Assign categories to debits if needed
-7. Click **Commit to GitHub**
+7. Click **Commit to GitHub** — untagged or skipped credits are saved to **Pending credits** on the home page
+
+You can return later (even after reload or more uploads), tag pending rows, and click **Commit tagged pending**. Use **Dismiss selected** only to drop credits you never want to import.
 
 Transactions are stored by content hash (`date|amount|details|cheque`). Re-uploading the same statement (or overlapping statements) silently ignores duplicates and merges new rows. Tagging a payer to an apartment updates `mappings/accounts.json`, moves matching past ledger rows, and auto-maps future imports.
 
@@ -67,6 +70,7 @@ data/
 ├── ledgers/1A.json …        # One file per apartment
 ├── expenditures.json
 ├── interest.json
+├── pending-credits.json     # Untagged/skipped credits awaiting later tagging
 └── uploads/<id>.json        # Import audit log (month label or timestamp)
 ```
 
