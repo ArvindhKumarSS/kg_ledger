@@ -30,6 +30,34 @@
   <main>
     <!-- Upload panel -->
     <section id="panel-upload" class="panel active">
+      <div id="pending-section" class="pending-section hidden">
+        <h2>Pending credits</h2>
+        <p class="muted pending-intro">
+          Untagged or skipped credits from previous uploads stay here until you assign an apartment and commit.
+        </p>
+        <div class="summary-grid" id="pending-summary"></div>
+        <div class="table-wrap">
+          <table id="pending-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Amount</th>
+                <th>Details</th>
+                <th>Source</th>
+                <th>Apartment</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="pending-actions">
+          <button class="btn" id="commit-pending-btn">Commit tagged pending</button>
+          <button class="btn btn-secondary" id="dismiss-pending-btn">Dismiss selected</button>
+          <span id="pending-commit-status"></span>
+        </div>
+      </div>
+
       <h2>Upload Bank Statement</h2>
       <div class="form-row">
         <label>

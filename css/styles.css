@@ -338,6 +338,29 @@ td.amount {
   color: #333;
 }
 
+.pending-section {
+  margin-bottom: 1.75rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.pending-section h2 {
+  margin-bottom: 0.35rem;
+}
+
+.pending-intro {
+  margin: 0 0 0.75rem;
+  font-size: 0.875rem;
+}
+
+.pending-actions {
+  margin-top: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+}
+
 .status-bar {
   font-size: 0.8rem;
   color: #666;

@@ -31,6 +31,98 @@ export function collectExistingTxnIds(data) {
   return ids;
 }
 
+function isPendingCreditCandidate(txn) {
+  return txn.txnType === 'credit' || txn.txnType === 'bulk_cash';
+}
+
+/** Credits deferred for later tagging: explicitly skipped or still unmapped */
+export function isDeferredCredit(txn) {
+  return isPendingCreditCandidate(txn) && (txn.skip || !txn.apartment);
+}
+
+/**
+ * Build durable pending-credit rows from a classified statement.
+ * Skips anything already imported to a ledger (or already queued).
+ */
+export async function collectPendingCredits(classified, sourceUpload, fileName, existingIds, existingPendingIds) {
+  const pending = [];
+  const seen = new Set(existingPendingIds || []);
+
+  for (const txn of classified) {
+    if (!isDeferredCredit(txn)) continue;
+
+    const txnId = await makeTxnId(txn);
+    if (existingIds.has(txnId) || seen.has(txnId)) continue;
+    seen.add(txnId);
+
+    const apartment = txn.apartment || null;
+    pending.push({
+      txnId,
+      date: txn.date,
+      creditAmount: txn.creditAmount,
+      details: txn.details,
+      chequeNumber: txn.chequeNumber || '',
+      mappingKey: txn.mappingKey || extractMappingKey(txn.details),
+      txnType: txn.txnType,
+      sourceUpload,
+      fileName: fileName || '',
+      // Explicit skip without an apartment stays "skipped"; tagged-but-deferred is ready later
+      skipped: Boolean(txn.skip) && !apartment,
+      apartment,
+      needsReview: !apartment,
+      addedAt: new Date().toISOString(),
+    });
+  }
+
+  return pending;
+}
+
+/** Merge by txnId; newer rows win for metadata, preserve earlier addedAt when present */
+export function mergePendingCredits(existing, incoming) {
+  const byId = new Map();
+  for (const row of existing || []) {
+    if (row?.txnId) byId.set(row.txnId, row);
+  }
+  for (const row of incoming || []) {
+    if (!row?.txnId) continue;
+    const prev = byId.get(row.txnId);
+    byId.set(row.txnId, {
+      ...prev,
+      ...row,
+      addedAt: prev?.addedAt || row.addedAt || new Date().toISOString(),
+    });
+  }
+  return [...byId.values()].sort((a, b) => {
+    if (a.date !== b.date) return a.date < b.date ? -1 : 1;
+    return (a.txnId || '').localeCompare(b.txnId || '');
+  });
+}
+
+export function removePendingCredits(pending, txnIds) {
+  const remove = new Set(txnIds || []);
+  return (pending || []).filter((row) => !remove.has(row.txnId));
+}
+
+/** Apply known payer→apartment maps onto pending rows (in place for UI preview) */
+export function suggestPendingApartments(pending, accounts, apartments) {
+  const aptSet = new Set(apartments || []);
+  return (pending || []).map((row) => {
+    if (row.apartment) return row;
+    const mapped = row.mappingKey ? accounts?.[row.mappingKey] : null;
+    if (mapped && aptSet.has(mapped)) {
+      return { ...row, apartment: mapped, needsReview: false, skipped: false };
+    }
+    return row;
+  });
+}
+
+/** Pending rows that have an apartment chosen and are ready to import */
+export function pendingReadyToImport(pending) {
+  return (pending || []).filter(
+    (row) => row.apartment && (row.txnType === 'credit' || row.txnType === 'bulk_cash')
+  );
+}
+
 function rememberApartmentTag(txn, txnId, newMappings, relocations) {
   if (!isApartmentCredit(txn)) return;
   const mappingKey = txn.mappingKey || extractMappingKey(txn.details);
@@ -206,6 +298,7 @@ export function mergeData(existing, updates) {
     interest: [...existing.interest, ...updates.interest],
     accountBalance: existing.accountBalance,
     ledgers: { ...existing.ledgers },
+    pendingCredits: [...(existing.pendingCredits || [])],
   };
 
   for (const [apt, rows] of Object.entries(updates.ledgerUpdates)) {
@@ -222,6 +315,21 @@ export function mergeData(existing, updates) {
     merged.config.apartments
   );
 
+  if (updates.pendingCredits) {
+    merged.pendingCredits = updates.pendingCredits;
+  } else if (updates.importedTxnIds?.length) {
+    // Anything just imported should leave the pending queue
+    merged.pendingCredits = removePendingCredits(merged.pendingCredits, updates.importedTxnIds);
+  }
+
+  // Also drop pending rows that were tagged onto an already-imported duplicate
+  if (updates.relocations?.length) {
+    merged.pendingCredits = removePendingCredits(
+      merged.pendingCredits,
+      updates.relocations.map((r) => r.txnId)
+    );
+  }
+
   return merged;
 }
 
@@ -232,6 +340,7 @@ export function buildCommitFiles(merged, uploadMeta) {
     'data/expenditures.json': merged.expenditures,
     'data/interest.json': merged.interest,
     'data/account-balance.json': merged.accountBalance,
+    'data/pending-credits.json': merged.pendingCredits || [],
   };
 
   for (const [apt, rows] of Object.entries(merged.ledgers)) {

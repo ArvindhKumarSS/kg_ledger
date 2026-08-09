@@ -11,6 +11,11 @@ import {
   canRemoveApartment,
   extractStatementSnapshot,
   updateAccountBalance,
+  collectPendingCredits,
+  mergePendingCredits,
+  removePendingCredits,
+  suggestPendingApartments,
+  pendingReadyToImport,
 } from './ledger-store.js';
 import { formatAmount, formatDisplayDate, escapeHtml, getCookie, setCookie } from './utils.js';
 
@@ -79,9 +84,17 @@ function ghClient() {
 
 async function reloadData() {
   state.data = await loadAllData(getBaseUrl());
+  if (!Array.isArray(state.data.pendingCredits)) state.data.pendingCredits = [];
+  // Suggest apartments from known payer maps after reload
+  state.data.pendingCredits = suggestPendingApartments(
+    state.data.pendingCredits,
+    state.data.accounts,
+    state.data.config.apartments
+  );
   document.getElementById('complex-name').textContent =
     `${state.data.config.complexName} — Maintenance Ledger`;
   renderAccountBalance();
+  renderPendingCredits();
   renderSettingsTags();
   renderBrowseApartments();
 }
@@ -99,6 +112,62 @@ function renderAccountBalance() {
 
   amountEl.textContent = `₹ ${formatAmount(bal.balance)} Cr`;
   footprintEl.textContent = `As of ${formatDisplayDate(bal.lastTransactionDate)}`;
+}
+
+function pendingRows() {
+  return state.data?.pendingCredits || [];
+}
+
+function renderPendingCredits() {
+  const rows = pendingRows();
+  const section = $('#pending-section');
+  if (!rows.length) {
+    section.classList.add('hidden');
+    return;
+  }
+
+  section.classList.remove('hidden');
+  const ready = pendingReadyToImport(rows);
+  const untagged = rows.filter((r) => !r.apartment || r.skipped);
+
+  $('#pending-summary').innerHTML = `
+    <div class="summary-card"><div class="num">${rows.length}</div><div class="lbl">Pending</div></div>
+    <div class="summary-card"><div class="num">${untagged.length}</div><div class="lbl">Still untagged</div></div>
+    <div class="summary-card"><div class="num">${ready.length}</div><div class="lbl">Ready to commit</div></div>
+  `;
+
+  $('#pending-table tbody').innerHTML = rows
+    .map((t, idx) => {
+      const status = t.apartment
+        ? '<span class="badge badge-ok">Ready</span>'
+        : t.skipped
+          ? '<span class="badge badge-info">Skipped</span>'
+          : '<span class="badge badge-warn">Unmapped</span>';
+      const source = t.fileName || t.sourceUpload || '—';
+      return `<tr data-pending-idx="${idx}">
+        <td>${formatDisplayDate(t.date)}</td>
+        <td class="amount">${formatAmount(t.creditAmount)}</td>
+        <td>${escapeHtml(t.details)}</td>
+        <td>${escapeHtml(source)}</td>
+        <td><select class="inline-select pending-apt-select" data-idx="${idx}">${aptOptions(t.apartment || '')}</select></td>
+        <td>
+          ${status}
+          <label><input type="checkbox" class="pending-dismiss-check" data-idx="${idx}"> Dismiss</label>
+        </td>
+      </tr>`;
+    })
+    .join('');
+
+  document.querySelectorAll('.pending-apt-select').forEach((sel) => {
+    sel.addEventListener('change', (e) => {
+      const idx = +e.target.dataset.idx;
+      const apt = e.target.value || null;
+      state.data.pendingCredits[idx].apartment = apt;
+      state.data.pendingCredits[idx].needsReview = !apt;
+      state.data.pendingCredits[idx].skipped = !apt;
+      renderPendingCredits();
+    });
+  });
 }
 
 function aptOptions(selected = '') {
@@ -257,11 +326,17 @@ async function handleCommit() {
   const uploadId = buildUploadId(month);
   const sourceUpload = month || uploadId;
 
-  const unmapped = state.classified.filter(
-    (t) => (t.txnType === 'credit' || t.txnType === 'bulk_cash') && !t.skip && !t.apartment
+  const deferred = state.classified.filter(
+    (t) => (t.txnType === 'credit' || t.txnType === 'bulk_cash') && (t.skip || !t.apartment)
   );
-  if (unmapped.length) {
-    if (!confirm(`${unmapped.length} credit(s) are unmapped and will be skipped. Continue?`)) return;
+  if (deferred.length) {
+    if (
+      !confirm(
+        `${deferred.length} credit(s) are untagged or skipped and will be saved to Pending for later tagging. Continue?`
+      )
+    ) {
+      return;
+    }
   }
 
   $('#commit-btn').disabled = true;
@@ -270,6 +345,23 @@ async function handleCommit() {
   try {
     const existingIds = collectExistingTxnIds(state.data);
     const updates = await buildLedgerEntries(state.classified, sourceUpload, existingIds);
+
+    const existingPendingIds = new Set((state.data.pendingCredits || []).map((r) => r.txnId));
+    const newPending = await collectPendingCredits(
+      state.classified,
+      sourceUpload,
+      state.fileName,
+      existingIds,
+      existingPendingIds
+    );
+    let pendingCredits = mergePendingCredits(state.data.pendingCredits || [], newPending);
+    // Drop anything imported or relocated in this commit
+    pendingCredits = removePendingCredits(pendingCredits, [
+      ...updates.importedTxnIds,
+      ...(updates.relocations || []).map((r) => r.txnId),
+    ]);
+    updates.pendingCredits = pendingCredits;
+
     const merged = mergeData(state.data, updates);
 
     const snapshot = extractStatementSnapshot(state.classified);
@@ -287,6 +379,8 @@ async function handleCommit() {
       transactionCount: updates.importedTxnIds.length,
       importedTxnIds: updates.importedTxnIds,
       skippedDuplicates: updates.skipped.length,
+      pendingCreditsAdded: newPending.length,
+      pendingCreditsTotal: pendingCredits.length,
     };
 
     const files = buildCommitFiles(merged, uploadMeta);
@@ -296,16 +390,130 @@ async function handleCommit() {
 
     state.data = merged;
     renderAccountBalance();
+    renderPendingCredits();
     $('#commit-status').textContent = `Committed (${sha.slice(0, 7)})`;
     const dupNote = updates.skipped.length
       ? ` ${updates.skipped.length} duplicate(s) ignored.`
       : '';
-    alert(`Successfully imported ${updates.importedTxnIds.length} transactions.${dupNote}`);
+    const pendingNote = newPending.length
+      ? ` ${newPending.length} credit(s) saved to Pending.`
+      : '';
+    alert(
+      `Successfully imported ${updates.importedTxnIds.length} transactions.${dupNote}${pendingNote}`
+    );
   } catch (err) {
     $('#commit-status').textContent = '';
     alert(`Commit failed: ${err.message}`);
   } finally {
     $('#commit-btn').disabled = false;
+  }
+}
+
+async function handleCommitPending() {
+  if (!ensureGitHubSettings()) return;
+
+  const ready = pendingReadyToImport(state.data.pendingCredits || []);
+  if (!ready.length) {
+    alert('Tag at least one pending credit with an apartment before committing.');
+    return;
+  }
+
+  if (!confirm(`Import ${ready.length} tagged pending credit(s) to apartment ledgers?`)) return;
+
+  $('#commit-pending-btn').disabled = true;
+  $('#dismiss-pending-btn').disabled = true;
+  $('#pending-commit-status').textContent = 'Committing…';
+
+  try {
+    const existingIds = collectExistingTxnIds(state.data);
+    // Reuse ledger import path; sourceUpload kept from original statement
+    const classified = ready.map((row) => ({
+      ...row,
+      skip: false,
+      needsReview: false,
+      debitAmount: null,
+    }));
+
+    // Group by sourceUpload so audit trails stay meaningful
+    const bySource = new Map();
+    for (const txn of classified) {
+      const key = txn.sourceUpload || 'pending';
+      if (!bySource.has(key)) bySource.set(key, []);
+      bySource.get(key).push(txn);
+    }
+
+    let working = { ...state.data, pendingCredits: [...(state.data.pendingCredits || [])] };
+    let importedTotal = 0;
+    let dupTotal = 0;
+
+    for (const [sourceUpload, txns] of bySource) {
+      const updates = await buildLedgerEntries(txns, sourceUpload, existingIds);
+      for (const id of updates.importedTxnIds) existingIds.add(id);
+      importedTotal += updates.importedTxnIds.length;
+      dupTotal += updates.skipped.length;
+      updates.pendingCredits = removePendingCredits(working.pendingCredits, [
+        ...updates.importedTxnIds,
+        ...(updates.relocations || []).map((r) => r.txnId),
+        ...txns.map((t) => t.txnId),
+      ]);
+      working = mergeData(working, updates);
+    }
+
+    const files = buildCommitFiles(working, null);
+    const client = ghClient();
+    const sha = await client.commitFiles(
+      `Import ${importedTotal} pending credit(s)`,
+      files
+    );
+
+    state.data = working;
+    renderAccountBalance();
+    renderPendingCredits();
+    $('#pending-commit-status').textContent = `Committed (${sha.slice(0, 7)})`;
+    const dupNote = dupTotal ? ` ${dupTotal} already in ledgers (tags updated).` : '';
+    alert(`Imported ${importedTotal} pending credit(s).${dupNote}`);
+  } catch (err) {
+    $('#pending-commit-status').textContent = '';
+    alert(`Commit failed: ${err.message}`);
+  } finally {
+    $('#commit-pending-btn').disabled = false;
+    $('#dismiss-pending-btn').disabled = false;
+  }
+}
+
+async function handleDismissPending() {
+  if (!ensureGitHubSettings()) return;
+
+  const checks = [...document.querySelectorAll('.pending-dismiss-check:checked')];
+  if (!checks.length) {
+    alert('Select one or more pending credits with Dismiss, then try again.');
+    return;
+  }
+
+  const ids = checks.map((cb) => state.data.pendingCredits[+cb.dataset.idx]?.txnId).filter(Boolean);
+  if (!confirm(`Permanently remove ${ids.length} pending credit(s) without importing?`)) return;
+
+  $('#commit-pending-btn').disabled = true;
+  $('#dismiss-pending-btn').disabled = true;
+  $('#pending-commit-status').textContent = 'Saving…';
+
+  try {
+    const pendingCredits = removePendingCredits(state.data.pendingCredits || [], ids);
+    const merged = { ...state.data, pendingCredits };
+    const files = {
+      'data/pending-credits.json': pendingCredits,
+    };
+    const client = ghClient();
+    const sha = await client.commitFiles(`Dismiss ${ids.length} pending credit(s)`, files);
+    state.data = merged;
+    renderPendingCredits();
+    $('#pending-commit-status').textContent = `Saved (${sha.slice(0, 7)})`;
+  } catch (err) {
+    $('#pending-commit-status').textContent = '';
+    alert(`Dismiss failed: ${err.message}`);
+  } finally {
+    $('#commit-pending-btn').disabled = false;
+    $('#dismiss-pending-btn').disabled = false;
   }
 }
 
@@ -508,6 +716,8 @@ function initUpload() {
   });
 
   $('#commit-btn').addEventListener('click', handleCommit);
+  $('#commit-pending-btn').addEventListener('click', handleCommitPending);
+  $('#dismiss-pending-btn').addEventListener('click', handleDismissPending);
 }
 
 function initBrowse() {
