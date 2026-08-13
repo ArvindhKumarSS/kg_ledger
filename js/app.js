@@ -17,6 +17,7 @@ import {
   suggestPendingApartments,
   pendingReadyToImport,
   collectAllTransactions,
+  applyTagCorrections,
 } from './ledger-store.js';
 import { formatAmount, formatDisplayDate, escapeHtml, getCookie, setCookie } from './utils.js';
 
@@ -34,6 +35,8 @@ const state = {
   classified: [],
   parseWarnings: [],
   fileName: '',
+  /** Unsaved Transactions-tab edits: txnId → { apartment?, category?, origin, type, mappingKey, details } */
+  txnEdits: new Map(),
 };
 
 function $(sel) {
@@ -103,8 +106,9 @@ async function fetchLatestData({ requireApi = false } = {}) {
   return loadAllData(getBaseUrl());
 }
 
-function applyLoadedData(data) {
+function applyLoadedData(data, { keepTxnEdits = false } = {}) {
   state.data = data;
+  if (!keepTxnEdits) state.txnEdits = new Map();
   if (!Array.isArray(state.data.pendingCredits)) state.data.pendingCredits = [];
   state.data.pendingCredits = suggestPendingApartments(
     state.data.pendingCredits,
@@ -204,10 +208,10 @@ function renderPendingCredits() {
   });
 }
 
-function aptOptions(selected = '') {
+function aptOptions(selected = '', { allowEmpty = true } = {}) {
   const apts = state.data?.config?.apartments || [];
   return (
-    `<option value="">—</option>` +
+    (allowEmpty ? `<option value="">—</option>` : '') +
     apts.map((a) => `<option value="${a}"${a === selected ? ' selected' : ''}>${a}</option>`).join('')
   );
 }
@@ -227,6 +231,66 @@ function switchTab(tab) {
   if (tab === 'transactions') renderTransactions();
 }
 
+function txnEffectiveRow(row) {
+  const edit = state.txnEdits.get(row.txnId);
+  if (!edit) return row;
+  return {
+    ...row,
+    apartment: edit.apartment !== undefined ? edit.apartment : row.apartment,
+    category: edit.category !== undefined ? edit.category : row.category,
+  };
+}
+
+function isTxnDirty(row) {
+  const edit = state.txnEdits.get(row.txnId);
+  if (!edit) return false;
+  if (row.origin === 'expenditure') {
+    return (edit.category || '') !== (row.category || '');
+  }
+  if (row.origin === 'ledger' || row.origin === 'pending') {
+    return (edit.apartment || '') !== (row.apartment || '');
+  }
+  return false;
+}
+
+function updateTxnSaveButton() {
+  const dirtyCount = [...state.txnEdits.keys()].filter((id) => {
+    const base = collectAllTransactions(state.data || {}).find((r) => r.txnId === id);
+    return base && isTxnDirty(base);
+  }).length;
+  const btn = $('#save-txn-tags-btn');
+  if (btn) {
+    btn.disabled = dirtyCount === 0;
+    btn.textContent =
+      dirtyCount > 0 ? `Save tag corrections (${dirtyCount})` : 'Save tag corrections';
+  }
+}
+
+function setTxnEdit(row, patch) {
+  const prev = state.txnEdits.get(row.txnId) || {
+    txnId: row.txnId,
+    origin: row.origin,
+    type: row.type,
+    mappingKey: row.mappingKey,
+    details: row.details,
+    apartment: row.apartment || '',
+    category: row.category || '',
+  };
+  const next = { ...prev, ...patch };
+  const baselineApt = row.apartment || '';
+  const baselineCat = row.category || '';
+  const aptChanged =
+    (row.origin === 'ledger' || row.origin === 'pending') &&
+    (next.apartment || '') !== baselineApt;
+  const catChanged = row.origin === 'expenditure' && (next.category || '') !== baselineCat;
+  if (aptChanged || catChanged) {
+    state.txnEdits.set(row.txnId, next);
+  } else {
+    state.txnEdits.delete(row.txnId);
+  }
+  updateTxnSaveButton();
+}
+
 function renderTransactions() {
   const tbody = $('#txn-tbody');
   const summary = $('#txn-summary');
@@ -242,6 +306,7 @@ function renderTransactions() {
           if (filter === 'debit') return r.type === 'debit';
           if (filter === 'interest') return r.type === 'interest';
           if (filter === 'pending') return String(r.status).startsWith('Pending');
+          if (filter === 'edited') return isTxnDirty(r);
           return true;
         });
 
@@ -249,11 +314,15 @@ function renderTransactions() {
   const debits = filtered.filter((r) => r.debitAmount != null);
   const creditTotal = credits.reduce((s, r) => s + (r.creditAmount || 0), 0);
   const debitTotal = debits.reduce((s, r) => s + (r.debitAmount || 0), 0);
+  const dirtyCount = rows.filter((r) => isTxnDirty(r)).length;
 
   summary.textContent =
     `${filtered.length} transaction(s)` +
     (credits.length ? ` · credits ₹${formatAmount(creditTotal)}` : '') +
-    (debits.length ? ` · debits ₹${formatAmount(debitTotal)}` : '');
+    (debits.length ? ` · debits ₹${formatAmount(debitTotal)}` : '') +
+    (dirtyCount ? ` · ${dirtyCount} unsaved correction(s)` : '');
+
+  updateTxnSaveButton();
 
   if (!filtered.length) {
     tbody.innerHTML = '<tr><td colspan="7">No committed transactions yet</td></tr>';
@@ -262,32 +331,177 @@ function renderTransactions() {
 
   tbody.innerHTML = filtered
     .map((r) => {
+      const view = txnEffectiveRow(r);
+      const dirty = isTxnDirty(r);
       const amount =
-        r.debitAmount != null
-          ? `− ${formatAmount(r.debitAmount)}`
-          : formatAmount(r.creditAmount || 0);
-      const tag =
-        r.type === 'debit'
-          ? escapeHtml(r.category || '—')
-          : r.type === 'interest'
-            ? 'Interest'
-            : escapeHtml(r.apartment || '—');
-      const badgeClass = String(r.status).startsWith('Pending')
+        view.debitAmount != null
+          ? `− ${formatAmount(view.debitAmount)}`
+          : formatAmount(view.creditAmount || 0);
+
+      let tagCell;
+      if (r.origin === 'expenditure') {
+        tagCell = `<select class="inline-select txn-cat-select" data-txn-id="${escapeHtml(r.txnId)}">${catOptions(view.category || '')}</select>`;
+      } else if (r.origin === 'ledger') {
+        // Already-mapped credits must keep an apartment; change to correct unit
+        tagCell = `<select class="inline-select txn-apt-select" data-txn-id="${escapeHtml(r.txnId)}">${aptOptions(view.apartment || '', { allowEmpty: false })}</select>`;
+      } else if (r.origin === 'pending') {
+        tagCell = `<select class="inline-select txn-apt-select" data-txn-id="${escapeHtml(r.txnId)}">${aptOptions(view.apartment || '')}</select>`;
+      } else {
+        tagCell = 'Interest';
+      }
+
+      const statusLabel = dirty ? `${r.status} · edited` : r.status;
+      const badgeClass = dirty
         ? 'badge-warn'
-        : r.type === 'debit'
-          ? 'badge-info'
-          : 'badge-ok';
-      return `<tr>
+        : String(r.status).startsWith('Pending')
+          ? 'badge-warn'
+          : r.type === 'debit'
+            ? 'badge-info'
+            : 'badge-ok';
+      return `<tr class="${dirty ? 'txn-dirty' : ''}" data-txn-id="${escapeHtml(r.txnId)}">
         <td>${formatDisplayDate(r.date)}</td>
         <td>${escapeHtml(r.type)}</td>
         <td class="amount">${amount}</td>
         <td>${escapeHtml(r.details)}</td>
-        <td>${tag}</td>
-        <td><span class="badge ${badgeClass}">${escapeHtml(r.status)}</span></td>
+        <td>${tagCell}</td>
+        <td><span class="badge ${badgeClass}">${escapeHtml(statusLabel)}</span></td>
         <td>${escapeHtml(r.sourceUpload || '—')}</td>
       </tr>`;
     })
     .join('');
+
+  const byId = new Map(rows.map((r) => [r.txnId, r]));
+
+  document.querySelectorAll('.txn-apt-select').forEach((sel) => {
+    sel.addEventListener('change', (e) => {
+      const row = byId.get(e.target.dataset.txnId);
+      if (!row) return;
+      setTxnEdit(row, { apartment: e.target.value || '' });
+      renderTransactions();
+    });
+  });
+
+  document.querySelectorAll('.txn-cat-select').forEach((sel) => {
+    sel.addEventListener('change', (e) => {
+      const row = byId.get(e.target.dataset.txnId);
+      if (!row) return;
+      setTxnEdit(row, { category: e.target.value || '' });
+      renderTransactions();
+    });
+  });
+}
+
+async function handleSaveTxnTags() {
+  if (!ensureGitHubSettings()) return;
+
+  const baseRows = collectAllTransactions(state.data || {});
+  const byId = new Map(baseRows.map((r) => [r.txnId, r]));
+  const corrections = [];
+  for (const [txnId, edit] of state.txnEdits) {
+    const base = byId.get(txnId);
+    if (!base || !isTxnDirty(base)) continue;
+    corrections.push({
+      txnId,
+      origin: base.origin,
+      type: base.type,
+      mappingKey: base.mappingKey,
+      details: base.details,
+      apartment: edit.apartment !== undefined ? edit.apartment || null : base.apartment || null,
+      category: edit.category !== undefined ? edit.category || '' : base.category || '',
+    });
+  }
+
+  if (!corrections.length) {
+    alert('No tag corrections to save.');
+    return;
+  }
+
+  const creditMoves = corrections.filter((c) => c.origin === 'ledger').length;
+  const pendingEdits = corrections.filter((c) => c.origin === 'pending').length;
+  const debitEdits = corrections.filter((c) => c.origin === 'expenditure').length;
+  const msg =
+    `Save ${corrections.length} correction(s)?` +
+    (creditMoves ? `\n• ${creditMoves} mapped credit(s) will move apartment (and update payer mapping)` : '') +
+    (pendingEdits ? `\n• ${pendingEdits} pending credit(s)` : '') +
+    (debitEdits ? `\n• ${debitEdits} debit categor${debitEdits === 1 ? 'y' : 'ies'}` : '');
+  if (!confirm(msg)) return;
+
+  const btn = $('#save-txn-tags-btn');
+  const status = $('#txn-save-status');
+  btn.disabled = true;
+  status.textContent = 'Saving…';
+
+  try {
+    const pendingEditsById = new Map(
+      corrections.filter((c) => c.origin === 'pending').map((c) => [c.txnId, c])
+    );
+    await refreshBeforeWrite();
+
+    // Re-resolve corrections against fresh git data
+    const freshRows = collectAllTransactions(state.data || {});
+    const freshById = new Map(freshRows.map((r) => [r.txnId, r]));
+    const freshCorrections = [];
+    for (const edit of corrections) {
+      const fresh = freshById.get(edit.txnId);
+      if (!fresh) continue;
+      if (edit.origin === 'ledger' || edit.origin === 'pending') {
+        if ((edit.apartment || '') === (fresh.apartment || '')) continue;
+        freshCorrections.push({
+          ...edit,
+          origin: fresh.origin,
+          type: fresh.type,
+          mappingKey: fresh.mappingKey,
+          details: fresh.details,
+        });
+      } else if (edit.origin === 'expenditure') {
+        if ((edit.category || '') === (fresh.category || '')) continue;
+        freshCorrections.push({ ...edit, origin: fresh.origin });
+      }
+    }
+
+    // Pending apartment choices from UI may not be on git yet
+    for (const [txnId, edit] of pendingEditsById) {
+      if (freshCorrections.some((c) => c.txnId === txnId)) continue;
+      const fresh = freshById.get(txnId);
+      if (!fresh || fresh.origin !== 'pending') continue;
+      if ((edit.apartment || '') === (fresh.apartment || '')) continue;
+      freshCorrections.push({
+        txnId,
+        origin: 'pending',
+        type: fresh.type,
+        mappingKey: fresh.mappingKey,
+        details: fresh.details,
+        apartment: edit.apartment || null,
+        category: '',
+      });
+    }
+
+    if (!freshCorrections.length) {
+      state.txnEdits = new Map();
+      status.textContent = 'Already up to date';
+      renderTransactions();
+      return;
+    }
+
+    const merged = applyTagCorrections(state.data, freshCorrections);
+    const files = buildCommitFiles({ ...merged, source: undefined }, null);
+    const client = ghClient();
+    const sha = await client.commitFiles(
+      `Correct tags on ${freshCorrections.length} transaction(s)`,
+      files
+    );
+
+    state.txnEdits = new Map();
+    applyLoadedData({ ...merged, source: 'github-api' }, { keepTxnEdits: false });
+    renderTransactions();
+    status.textContent = `Saved (${sha.slice(0, 7)})`;
+    alert(`Saved ${freshCorrections.length} tag correction(s).`);
+  } catch (err) {
+    status.textContent = '';
+    alert(`Save failed: ${err.message}`);
+  } finally {
+    updateTxnSaveButton();
+  }
 }
 
 function renderSummary(classified) {
@@ -883,12 +1097,17 @@ function initBrowse() {
 
 function initTransactions() {
   $('#txn-filter')?.addEventListener('change', renderTransactions);
+  $('#save-txn-tags-btn')?.addEventListener('click', handleSaveTxnTags);
   $('#reload-data-btn')?.addEventListener('click', async () => {
     const btn = $('#reload-data-btn');
     btn.disabled = true;
     try {
+      if (state.txnEdits.size && !confirm('Reload and discard unsaved tag corrections?')) {
+        return;
+      }
       await reloadData({ requireApi: hasGitHubSettings() });
       renderTransactions();
+      $('#txn-save-status').textContent = '';
     } catch (e) {
       alert(`Reload failed: ${e.message}`);
     } finally {
