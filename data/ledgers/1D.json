@@ -1,1 +1,34 @@
-[]
+[
+  {
+    "date": "2026-04-03",
+    "creditAmount": 3000,
+    "details": "IMPS/609311759607/CHENTHI/FDRL/XXXXXX1910/KG SR",
+    "sourceUpload": "2026-08-09T04-11-21-232Z",
+    "txnId": "61e012dbd43ca037",
+    "mappingKey": "chenthi fdrl"
+  },
+  {
+    "date": "2026-05-01",
+    "creditAmount": 3000,
+    "details": "IMPS/612115370050/CHENTHI/FDRL/XXXXXX1910/KG SR",
+    "sourceUpload": "2026-08-09T04-11-21-232Z",
+    "txnId": "0a02a82e44c3778b",
+    "mappingKey": "chenthi fdrl"
+  },
+  {
+    "date": "2026-05-31",
+    "creditAmount": 3000,
+    "details": "IMPS/615110615429/CHENTHI/FDRL/XXXXXX1910/KG SR",
+    "sourceUpload": "2026-08-09T04-11-21-232Z",
+    "txnId": "0dbdd009b82d29a0",
+    "mappingKey": "chenthi fdrl"
+  },
+  {
+    "date": "2026-07-01",
+    "creditAmount": 3000,
+    "details": "IMPS/618209120751/CHENTHI/FDRL/XXXXXX1910/KG SR",
+    "sourceUpload": "2026-08-09T04-13-00-031Z",
+    "txnId": "0a44d30bd61eb480",
+    "mappingKey": "chenthi fdrl"
+  }
+]
