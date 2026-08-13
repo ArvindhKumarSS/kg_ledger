@@ -121,6 +121,8 @@ function applyLoadedData(data, { keepTxnEdits = false } = {}) {
   renderPendingCredits();
   renderSettingsTags();
   renderBrowseApartments();
+  // Always refresh filter option lists when data arrives (even if tab not active yet)
+  populateTxnFilterOptions();
   if ($('#panel-transactions')?.classList.contains('active')) renderTransactions();
 }
 
@@ -228,7 +230,10 @@ function switchTab(tab) {
   document.querySelectorAll('.panel').forEach((p) => p.classList.remove('active'));
   document.getElementById(`panel-${tab}`).classList.add('active');
   if (tab === 'browse') renderBrowse();
-  if (tab === 'transactions') renderTransactions();
+  if (tab === 'transactions') {
+    populateTxnFilterOptions();
+    renderTransactions();
+  }
 }
 
 function txnEffectiveRow(row) {
@@ -291,26 +296,48 @@ function setTxnEdit(row, patch) {
   updateTxnSaveButton();
 }
 
+function apartmentFilterList() {
+  const fromConfig = state.data?.config?.apartments || [];
+  const fromLedgers = Object.keys(state.data?.ledgers || {});
+  const fromPending = (state.data?.pendingCredits || [])
+    .map((r) => r.apartment)
+    .filter(Boolean);
+  const set = new Set([...fromConfig, ...fromLedgers, ...fromPending]);
+  return [...set].sort((a, b) => {
+    const af = parseInt(a, 10) || 0;
+    const bf = parseInt(b, 10) || 0;
+    if (af !== bf) return af - bf;
+    return a.localeCompare(b);
+  });
+}
+
 function populateTxnFilterOptions() {
-  const aptSel = $('#txn-filter-apartment');
-  const catSel = $('#txn-filter-category');
+  const aptSel = document.getElementById('txn-filter-apartment');
+  const catSel = document.getElementById('txn-filter-category');
   if (!aptSel || !catSel) return;
 
   const prevApt = aptSel.value || 'all';
   const prevCat = catSel.value || 'all';
-  const apts = state.data?.config?.apartments || [];
-  const cats = state.data?.config?.expenseCategories || [];
+  const apts = apartmentFilterList();
+  const cats = [...(state.data?.config?.expenseCategories || [])];
+  // Include any categories already used on expenditures
+  for (const row of state.data?.expenditures || []) {
+    if (row.category && !cats.includes(row.category)) cats.push(row.category);
+  }
+  cats.sort((a, b) => a.localeCompare(b));
 
   aptSel.innerHTML =
-    `<option value="all">All apartments</option>` +
+    `<option value="all">All (${apts.length})</option>` +
     apts.map((a) => `<option value="${escapeHtml(a)}">${escapeHtml(a)}</option>`).join('');
   if ([...aptSel.options].some((o) => o.value === prevApt)) aptSel.value = prevApt;
+  else aptSel.value = 'all';
 
   catSel.innerHTML =
-    `<option value="all">All categories</option>` +
+    `<option value="all">All (${cats.length})</option>` +
     `<option value="__none__">Uncategorized</option>` +
     cats.map((c) => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
   if ([...catSel.options].some((o) => o.value === prevCat)) catSel.value = prevCat;
+  else catSel.value = 'all';
 }
 
 function getTxnFilters() {
