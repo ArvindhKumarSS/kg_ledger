@@ -24,6 +24,14 @@
     "mappingKey": "venkataram maintainan"
   },
   {
+    "date": "2026-07-01",
+    "creditAmount": 4238,
+    "details": "NEFT-ICIC-IN12618244032301-VENKATARAM-MAINTENANC",
+    "sourceUpload": "2026-08-09T04-13-00-031Z",
+    "txnId": "e5c059f5a6f0b45f",
+    "mappingKey": "venkataram maintenanc"
+  },
+  {
     "date": "2026-07-04",
     "creditAmount": 4238,
     "details": "NEFT-CIUB-CIUBH26185024233-ARUN T K-/ATTN/1F",

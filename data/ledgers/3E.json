@@ -22,5 +22,13 @@
     "sourceUpload": "2026-08-09T04-11-21-232Z",
     "txnId": "d00976e452e69187",
     "mappingKey": "ramesh icic"
+  },
+  {
+    "date": "2026-07-02",
+    "creditAmount": 3525,
+    "details": "IMPS/618317980235/RAMESH /ICIC/XXXXXX9284/Rames",
+    "sourceUpload": "2026-08-09T04-13-00-031Z",
+    "txnId": "38b4b83308ce9a14",
+    "mappingKey": "ramesh icic"
   }
 ]
