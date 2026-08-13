@@ -1,1 +1,10 @@
-[]
+[
+  {
+    "date": "2026-04-05",
+    "creditAmount": 12075,
+    "details": "IMPS/609518959336/DAVID J/ICIC/XXXXXX3679/IMPS",
+    "sourceUpload": "2026-08-09T04-11-21-232Z",
+    "txnId": "56fc0677c2c363f5",
+    "mappingKey": "david j icic"
+  }
+]

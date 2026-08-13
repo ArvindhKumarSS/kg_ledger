@@ -1,20 +1,5 @@
 [
   {
-    "txnId": "56fc0677c2c363f5",
-    "date": "2026-04-05",
-    "creditAmount": 12075,
-    "details": "IMPS/609518959336/DAVID J/ICIC/XXXXXX3679/IMPS",
-    "chequeNumber": "",
-    "mappingKey": "david j icic",
-    "txnType": "credit",
-    "sourceUpload": "2026-08-09T04-11-21-232Z",
-    "fileName": "3443 statement (1).pdf",
-    "skipped": false,
-    "apartment": null,
-    "needsReview": true,
-    "addedAt": "2026-08-09T04:11:26.933Z"
-  },
-  {
     "txnId": "d0097a1eb6ccc6a3",
     "date": "2026-04-06",
     "creditAmount": 17000,
