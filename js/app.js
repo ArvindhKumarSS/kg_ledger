@@ -291,41 +291,135 @@ function setTxnEdit(row, patch) {
   updateTxnSaveButton();
 }
 
+function populateTxnFilterOptions() {
+  const aptSel = $('#txn-filter-apartment');
+  const catSel = $('#txn-filter-category');
+  if (!aptSel || !catSel) return;
+
+  const prevApt = aptSel.value || 'all';
+  const prevCat = catSel.value || 'all';
+  const apts = state.data?.config?.apartments || [];
+  const cats = state.data?.config?.expenseCategories || [];
+
+  aptSel.innerHTML =
+    `<option value="all">All apartments</option>` +
+    apts.map((a) => `<option value="${escapeHtml(a)}">${escapeHtml(a)}</option>`).join('');
+  if ([...aptSel.options].some((o) => o.value === prevApt)) aptSel.value = prevApt;
+
+  catSel.innerHTML =
+    `<option value="all">All categories</option>` +
+    `<option value="__none__">Uncategorized</option>` +
+    cats.map((c) => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+  if ([...catSel.options].some((o) => o.value === prevCat)) catSel.value = prevCat;
+}
+
+function getTxnFilters() {
+  return {
+    kind: ($('#txn-filter-kind')?.value || 'all').toLowerCase(),
+    mapping: ($('#txn-filter-mapping')?.value || 'all').toLowerCase(),
+    apartment: $('#txn-filter-apartment')?.value || 'all',
+    category: $('#txn-filter-category')?.value || 'all',
+    edits: ($('#txn-filter-edits')?.value || 'all').toLowerCase(),
+  };
+}
+
+function clearTxnFilters() {
+  const kind = $('#txn-filter-kind');
+  const mapping = $('#txn-filter-mapping');
+  const apartment = $('#txn-filter-apartment');
+  const category = $('#txn-filter-category');
+  const edits = $('#txn-filter-edits');
+  if (kind) kind.value = 'all';
+  if (mapping) mapping.value = 'all';
+  if (apartment) apartment.value = 'all';
+  if (category) category.value = 'all';
+  if (edits) edits.value = 'all';
+}
+
+function matchesTxnFilters(row, filters) {
+  const view = txnEffectiveRow(row);
+
+  if (filters.kind === 'income') {
+    if (!(row.type === 'credit' || row.type === 'bulk_cash' || row.type === 'interest')) return false;
+  } else if (filters.kind === 'expenditure') {
+    if (row.type !== 'debit') return false;
+  } else if (filters.kind === 'interest') {
+    if (row.type !== 'interest') return false;
+  }
+
+  if (filters.mapping === 'mapped') {
+    // Mapped apartment credits, or categorized expenditures
+    if (row.origin === 'ledger') {
+      /* ok */
+    } else if (row.origin === 'expenditure' && (view.category || '')) {
+      /* ok */
+    } else {
+      return false;
+    }
+  } else if (filters.mapping === 'unmapped') {
+    if (row.origin === 'pending') {
+      /* ok — untagged or still in pending queue */
+    } else if (row.origin === 'expenditure' && !(view.category || '')) {
+      /* ok — uncategorized debit */
+    } else {
+      return false;
+    }
+  }
+
+  if (filters.apartment !== 'all') {
+    if ((view.apartment || '') !== filters.apartment) return false;
+  }
+
+  if (filters.category !== 'all') {
+    if (filters.category === '__none__') {
+      if (row.origin !== 'expenditure' || (view.category || '')) return false;
+    } else if ((view.category || '') !== filters.category) {
+      return false;
+    }
+  }
+
+  if (filters.edits === 'edited' && !isTxnDirty(row)) return false;
+
+  return true;
+}
+
 function renderTransactions() {
   const tbody = $('#txn-tbody');
   const summary = $('#txn-summary');
   if (!tbody || !summary) return;
 
+  populateTxnFilterOptions();
+
   const rows = collectAllTransactions(state.data || {});
-  const filter = ($('#txn-filter')?.value || 'all').toLowerCase();
-  const filtered =
-    filter === 'all'
-      ? rows
-      : rows.filter((r) => {
-          if (filter === 'credit') return r.type === 'credit' || r.type === 'bulk_cash';
-          if (filter === 'debit') return r.type === 'debit';
-          if (filter === 'interest') return r.type === 'interest';
-          if (filter === 'pending') return String(r.status).startsWith('Pending');
-          if (filter === 'edited') return isTxnDirty(r);
-          return true;
-        });
+  const filters = getTxnFilters();
+  const filtered = rows.filter((r) => matchesTxnFilters(r, filters));
 
   const credits = filtered.filter((r) => r.creditAmount != null);
   const debits = filtered.filter((r) => r.debitAmount != null);
   const creditTotal = credits.reduce((s, r) => s + (r.creditAmount || 0), 0);
   const debitTotal = debits.reduce((s, r) => s + (r.debitAmount || 0), 0);
   const dirtyCount = rows.filter((r) => isTxnDirty(r)).length;
+  const activeFilters = [
+    filters.kind !== 'all' ? `kind=${filters.kind}` : '',
+    filters.mapping !== 'all' ? `mapping=${filters.mapping}` : '',
+    filters.apartment !== 'all' ? `apt=${filters.apartment}` : '',
+    filters.category !== 'all'
+      ? `cat=${filters.category === '__none__' ? 'uncategorized' : filters.category}`
+      : '',
+    filters.edits !== 'all' ? 'unsaved' : '',
+  ].filter(Boolean);
 
   summary.textContent =
-    `${filtered.length} transaction(s)` +
-    (credits.length ? ` · credits ₹${formatAmount(creditTotal)}` : '') +
-    (debits.length ? ` · debits ₹${formatAmount(debitTotal)}` : '') +
+    `${filtered.length} of ${rows.length} transaction(s)` +
+    (activeFilters.length ? ` · filters: ${activeFilters.join(', ')}` : '') +
+    (credits.length ? ` · income ₹${formatAmount(creditTotal)}` : '') +
+    (debits.length ? ` · expenditure ₹${formatAmount(debitTotal)}` : '') +
     (dirtyCount ? ` · ${dirtyCount} unsaved correction(s)` : '');
 
   updateTxnSaveButton();
 
   if (!filtered.length) {
-    tbody.innerHTML = '<tr><td colspan="7">No committed transactions yet</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7">No transactions match these filters</td></tr>';
     return;
   }
 
@@ -1096,7 +1190,15 @@ function initBrowse() {
 }
 
 function initTransactions() {
-  $('#txn-filter')?.addEventListener('change', renderTransactions);
+  ['txn-filter-kind', 'txn-filter-mapping', 'txn-filter-apartment', 'txn-filter-category', 'txn-filter-edits'].forEach(
+    (id) => {
+      document.getElementById(id)?.addEventListener('change', renderTransactions);
+    }
+  );
+  $('#txn-clear-filters-btn')?.addEventListener('click', () => {
+    clearTxnFilters();
+    renderTransactions();
+  });
   $('#save-txn-tags-btn')?.addEventListener('click', handleSaveTxnTags);
   $('#reload-data-btn')?.addEventListener('click', async () => {
     const btn = $('#reload-data-btn');
