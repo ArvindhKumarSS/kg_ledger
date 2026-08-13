@@ -361,6 +361,14 @@ td.amount {
   align-items: center;
 }
 
+tr.txn-dirty {
+  background: #fff8e8;
+}
+
+tr.txn-dirty td {
+  border-color: #f0e0b8;
+}
+
 .status-bar {
   font-size: 0.8rem;
   color: #666;

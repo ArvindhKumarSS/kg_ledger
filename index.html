@@ -130,7 +130,8 @@
     <section id="panel-transactions" class="panel">
       <h2>All transactions</h2>
       <p class="muted pending-intro">
-        Read-only view of every unique committed transaction — mapped credits, expenditures, interest, and pending credits.
+        Every unique committed transaction. Correct apartment tags on credits (or pending) and categories on debits, then save.
+        Credit retags also update the payer mapping for future statements.
       </p>
       <div class="form-row">
         <label>
@@ -141,9 +142,12 @@
             <option value="debit">Debits</option>
             <option value="interest">Interest</option>
             <option value="pending">Pending</option>
+            <option value="edited">Edited (unsaved)</option>
           </select>
         </label>
         <button class="btn btn-secondary" id="reload-data-btn" type="button">Reload from GitHub</button>
+        <button class="btn" id="save-txn-tags-btn" type="button" disabled>Save tag corrections</button>
+        <span id="txn-save-status"></span>
       </div>
       <div class="status-bar" id="txn-summary" style="margin-top:0;border-top:none;padding-top:0"></div>
       <div class="table-wrap">

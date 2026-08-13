@@ -412,7 +412,7 @@ export function updateAccountBalance(current, snapshot, statementMonth) {
 }
 
 /**
- * All unique committed transactions for the read-only Transactions tab.
+ * All unique committed transactions for the Transactions tab.
  * Includes apartment credits, expenditures, interest, and still-pending credits.
  */
 export function collectAllTransactions(data) {
@@ -421,6 +421,7 @@ export function collectAllTransactions(data) {
   for (const [apt, rows] of Object.entries(data?.ledgers || {})) {
     for (const row of rows || []) {
       if (!row?.txnId) continue;
+      const mappingKey = row.mappingKey || extractMappingKey(row.details || '');
       byId.set(row.txnId, {
         txnId: row.txnId,
         date: row.date,
@@ -430,6 +431,8 @@ export function collectAllTransactions(data) {
         details: row.details || '',
         apartment: apt,
         category: '',
+        mappingKey,
+        origin: 'ledger',
         status: 'Mapped',
         sourceUpload: row.sourceUpload || '',
       });
@@ -447,6 +450,8 @@ export function collectAllTransactions(data) {
       details: row.details || '',
       apartment: '',
       category: row.category || '',
+      mappingKey: '',
+      origin: 'expenditure',
       status: 'Imported',
       sourceUpload: row.sourceUpload || '',
     });
@@ -463,6 +468,8 @@ export function collectAllTransactions(data) {
       details: row.details || '',
       apartment: '',
       category: 'Interest',
+      mappingKey: '',
+      origin: 'interest',
       status: 'Interest',
       sourceUpload: row.sourceUpload || '',
     });
@@ -470,6 +477,7 @@ export function collectAllTransactions(data) {
 
   for (const row of data?.pendingCredits || []) {
     if (!row?.txnId || byId.has(row.txnId)) continue;
+    const mappingKey = row.mappingKey || extractMappingKey(row.details || '');
     byId.set(row.txnId, {
       txnId: row.txnId,
       date: row.date,
@@ -479,6 +487,8 @@ export function collectAllTransactions(data) {
       details: row.details || '',
       apartment: row.apartment || '',
       category: '',
+      mappingKey,
+      origin: 'pending',
       status: row.apartment ? 'Pending (tagged)' : 'Pending',
       sourceUpload: row.sourceUpload || row.fileName || '',
     });
@@ -491,4 +501,74 @@ export function collectAllTransactions(data) {
     if (aAmt !== bAmt) return aAmt - bAmt;
     return (a.txnId || '').localeCompare(b.txnId || '');
   });
+}
+
+/**
+ * Apply apartment/category corrections from the Transactions tab.
+ * Credit retags relocate the txn and update payer→apartment mappings
+ * (which also reassigns matching historical ledger rows).
+ */
+export function applyTagCorrections(data, corrections) {
+  const edits = (corrections || []).filter((e) => e?.txnId);
+  if (!edits.length) return data;
+
+  const next = {
+    ...data,
+    config: data.config,
+    accounts: { ...data.accounts },
+    expenditures: (data.expenditures || []).map((r) => ({ ...r })),
+    interest: data.interest,
+    accountBalance: data.accountBalance,
+    pendingCredits: (data.pendingCredits || []).map((r) => ({ ...r })),
+    ledgers: {},
+  };
+
+  for (const [apt, rows] of Object.entries(data.ledgers || {})) {
+    next.ledgers[apt] = (rows || []).map((r) => ({ ...r }));
+  }
+
+  const relocations = [];
+  const newMappings = {};
+
+  for (const edit of edits) {
+    if (edit.origin === 'ledger') {
+      const apartment = edit.apartment || null;
+      if (!apartment) continue;
+      const mappingKey = edit.mappingKey || extractMappingKey(edit.details || '');
+      relocations.push({ txnId: edit.txnId, apartment, mappingKey });
+      if (edit.type === 'credit' && mappingKey) {
+        newMappings[mappingKey] = apartment;
+      }
+      continue;
+    }
+
+    if (edit.origin === 'pending') {
+      const row = next.pendingCredits.find((r) => r.txnId === edit.txnId);
+      if (!row) continue;
+      const apartment = edit.apartment || null;
+      row.apartment = apartment;
+      row.skipped = !apartment;
+      row.needsReview = !apartment;
+      if (apartment && row.txnType === 'credit') {
+        const mappingKey = row.mappingKey || extractMappingKey(row.details || '');
+        if (mappingKey) newMappings[mappingKey] = apartment;
+      }
+      continue;
+    }
+
+    if (edit.origin === 'expenditure') {
+      const row = next.expenditures.find((r) => r.txnId === edit.txnId);
+      if (!row) continue;
+      row.category = edit.category || '';
+    }
+  }
+
+  next.accounts = { ...next.accounts, ...newMappings };
+  next.ledgers = applyTxnRelocations(next.ledgers, relocations);
+  next.ledgers = reapplyAccountMappings(
+    next.ledgers,
+    next.accounts,
+    next.config?.apartments
+  );
+  return next;
 }
