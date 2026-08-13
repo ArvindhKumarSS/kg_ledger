@@ -1,1 +1,10 @@
-[]
+[
+  {
+    "date": "2026-06-12",
+    "creditAmount": 13044,
+    "details": "NEFT-IDIB-IDIBH16346057187-PRANAAV CO-//ATTN",
+    "sourceUpload": "2026-08-09T04-13-00-031Z",
+    "txnId": "27b743c1ba444cbc",
+    "mappingKey": "pranaav co attn"
+  }
+]

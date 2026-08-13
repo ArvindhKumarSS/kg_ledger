@@ -1,1 +1,26 @@
-[]
+[
+  {
+    "date": "2026-05-01",
+    "creditAmount": 3000,
+    "details": "MB/612115722389/XXXXXX3171/K SSREEDHA Maint Ma",
+    "sourceUpload": "2026-08-09T04-11-21-232Z",
+    "txnId": "5c609b7e78e3bd0d",
+    "mappingKey": "k ssreedha"
+  },
+  {
+    "date": "2026-06-01",
+    "creditAmount": 3000,
+    "details": "MB/615207760600/XXXXXX3171/K SSREEDHA Maint Ju",
+    "sourceUpload": "2026-08-09T04-11-21-232Z",
+    "txnId": "729cf48de156c617",
+    "mappingKey": "k ssreedha"
+  },
+  {
+    "date": "2026-07-01",
+    "creditAmount": 3000,
+    "details": "MB/618207045246/XXXXXX3171/K SSREEDHA Maint Ju",
+    "sourceUpload": "2026-08-09T04-13-00-031Z",
+    "txnId": "6c04bbd59cb7cdc2",
+    "mappingKey": "k ssreedha"
+  }
+]
