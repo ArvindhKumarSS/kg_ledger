@@ -1,1 +1,18 @@
-[]
+[
+  {
+    "date": "2026-04-16",
+    "creditAmount": 4500,
+    "details": "IMPS/610649542620/K J SRI/HDFC/XXXXXX6757/IMPS",
+    "sourceUpload": "2026-08-09T04-11-21-232Z",
+    "txnId": "bfff286b38514934",
+    "mappingKey": "k j sri hdfc"
+  },
+  {
+    "date": "2026-05-14",
+    "creditAmount": 4500,
+    "details": "IMPS/613426614379/K J SRI/HDFC/XXXXXX6757/IMPS",
+    "sourceUpload": "2026-08-09T04-11-21-232Z",
+    "txnId": "0e36fde4bb2e8c99",
+    "mappingKey": "k j sri hdfc"
+  }
+]

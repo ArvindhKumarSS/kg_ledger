@@ -1,1 +1,26 @@
-[]
+[
+  {
+    "date": "2026-04-07",
+    "creditAmount": 3525,
+    "details": "By CAPT S SRI",
+    "sourceUpload": "2026-08-09T04-11-21-232Z",
+    "txnId": "89fe558bba4424f0",
+    "mappingKey": "capt s sri"
+  },
+  {
+    "date": "2026-05-07",
+    "creditAmount": 3525,
+    "details": "By CAPT S SRI",
+    "sourceUpload": "2026-08-09T04-11-21-232Z",
+    "txnId": "6ddcbf78f9608c66",
+    "mappingKey": "capt s sri"
+  },
+  {
+    "date": "2026-06-07",
+    "creditAmount": 3525,
+    "details": "By CAPT S SRI",
+    "sourceUpload": "2026-08-09T04-13-00-031Z",
+    "txnId": "3bd1bd21c907bbd2",
+    "mappingKey": "capt s sri"
+  }
+]

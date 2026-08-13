@@ -1,1 +1,26 @@
-[]
+[
+  {
+    "date": "2026-04-30",
+    "creditAmount": 3680,
+    "details": "NEFT-HDFC-HDFCH00962342237-AMIRTHARAJ-0001",
+    "sourceUpload": "2026-08-09T04-11-21-232Z",
+    "txnId": "1b2ae8681f47df58",
+    "mappingKey": "amirtharaj"
+  },
+  {
+    "date": "2026-05-30",
+    "creditAmount": 3680,
+    "details": "NEFT-HDFC-HDFCH01025491110-AMIRTHARAJ-0001",
+    "sourceUpload": "2026-08-09T04-11-21-232Z",
+    "txnId": "a2394887bf80832b",
+    "mappingKey": "amirtharaj"
+  },
+  {
+    "date": "2026-06-30",
+    "creditAmount": 3680,
+    "details": "NEFT-HDFC-HDFCH01087837233-AMIRTHARAJ-0001",
+    "sourceUpload": "2026-08-09T04-13-00-031Z",
+    "txnId": "898d79fca85b4eed",
+    "mappingKey": "amirtharaj"
+  }
+]

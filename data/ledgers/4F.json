@@ -1,1 +1,26 @@
-[]
+[
+  {
+    "date": "2026-04-22",
+    "creditAmount": 4238,
+    "details": "NEFT-KKBK-KKBKH26112693124-JEHANBUX A-PAYMENT",
+    "sourceUpload": "2026-08-09T04-11-21-232Z",
+    "txnId": "c6572d0ccfebe630",
+    "mappingKey": "jehanbux a payment"
+  },
+  {
+    "date": "2026-05-22",
+    "creditAmount": 4238,
+    "details": "NEFT-KKBK-KKBKH26142953945-JEHANBUX A-PAYMENT",
+    "sourceUpload": "2026-08-09T04-11-21-232Z",
+    "txnId": "8fd6bf46da566cb7",
+    "mappingKey": "jehanbux a payment"
+  },
+  {
+    "date": "2026-06-22",
+    "creditAmount": 4238,
+    "details": "NEFT-KKBK-KKBKH26173773903-JEHANBUX A-PAYMENT",
+    "sourceUpload": "2026-08-09T04-13-00-031Z",
+    "txnId": "937359eec230ad76",
+    "mappingKey": "jehanbux a payment"
+  }
+]

@@ -1,1 +1,26 @@
-[]
+[
+  {
+    "date": "2026-04-15",
+    "creditAmount": 3000,
+    "details": "NEFT-UTIB-AXOMB10502005501-MOHAMMED Z-OTHERS-MAI",
+    "sourceUpload": "2026-08-09T04-11-21-232Z",
+    "txnId": "a1b5983fc0f7475f",
+    "mappingKey": "mohammed z others mai"
+  },
+  {
+    "date": "2026-05-15",
+    "creditAmount": 3000,
+    "details": "NEFT-UTIB-AXOMB13502005407-MOHAMMED Z-OTHERS-MAI",
+    "sourceUpload": "2026-08-09T04-11-21-232Z",
+    "txnId": "0218a7188d1d6a8b",
+    "mappingKey": "mohammed z others mai"
+  },
+  {
+    "date": "2026-06-15",
+    "creditAmount": 3000,
+    "details": "NEFT-UTIB-AXOMB16602005172-MOHAMMED Z-OTHERS-MAI",
+    "sourceUpload": "2026-08-09T04-13-00-031Z",
+    "txnId": "710e33414247a976",
+    "mappingKey": "mohammed z others mai"
+  }
+]

@@ -1,1 +1,26 @@
-[]
+[
+  {
+    "date": "2026-04-13",
+    "creditAmount": 4863,
+    "details": "MAHJABEEN AHMED",
+    "sourceUpload": "2026-08-09T04-11-21-232Z",
+    "txnId": "62be17a0c7bd12c9",
+    "mappingKey": "mahjabeen ahmed"
+  },
+  {
+    "date": "2026-05-14",
+    "creditAmount": 4863,
+    "details": "JAMIL AHMED",
+    "sourceUpload": "2026-08-09T04-11-21-232Z",
+    "txnId": "fb4e5dd059376032",
+    "mappingKey": "jamil ahmed"
+  },
+  {
+    "date": "2026-06-12",
+    "creditAmount": 4863,
+    "details": "JAMIL AHAMED",
+    "sourceUpload": "2026-08-09T04-13-00-031Z",
+    "txnId": "5d5c222925dcb606",
+    "mappingKey": "jamil ahamed"
+  }
+]
