@@ -133,18 +133,44 @@
         Every unique committed transaction. Correct apartment tags on credits (or pending) and categories on debits, then save.
         Credit retags also update the payer mapping for future statements.
       </p>
-      <div class="form-row">
+      <div class="form-row txn-filters">
         <label>
-          Filter
-          <select id="txn-filter">
+          Kind
+          <select id="txn-filter-kind">
             <option value="all">All</option>
-            <option value="credit">Credits</option>
-            <option value="debit">Debits</option>
+            <option value="income">Income</option>
+            <option value="expenditure">Expenditure</option>
             <option value="interest">Interest</option>
-            <option value="pending">Pending</option>
-            <option value="edited">Edited (unsaved)</option>
           </select>
         </label>
+        <label>
+          Mapping
+          <select id="txn-filter-mapping">
+            <option value="all">All</option>
+            <option value="mapped">Mapped</option>
+            <option value="unmapped">Unmapped / pending</option>
+          </select>
+        </label>
+        <label>
+          Apartment
+          <select id="txn-filter-apartment">
+            <option value="all">All apartments</option>
+          </select>
+        </label>
+        <label>
+          Category
+          <select id="txn-filter-category">
+            <option value="all">All categories</option>
+          </select>
+        </label>
+        <label>
+          Edits
+          <select id="txn-filter-edits">
+            <option value="all">All</option>
+            <option value="edited">Unsaved only</option>
+          </select>
+        </label>
+        <button class="btn btn-secondary" id="txn-clear-filters-btn" type="button">Clear filters</button>
         <button class="btn btn-secondary" id="reload-data-btn" type="button">Reload from GitHub</button>
         <button class="btn" id="save-txn-tags-btn" type="button" disabled>Save tag corrections</button>
         <span id="txn-save-status"></span>

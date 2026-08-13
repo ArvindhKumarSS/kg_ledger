@@ -369,6 +369,18 @@ tr.txn-dirty td {
   border-color: #f0e0b8;
 }
 
+.txn-filters {
+  align-items: flex-end;
+}
+
+.txn-filters label {
+  min-width: 0;
+}
+
+.txn-filters select {
+  min-width: 120px;
+}
+
 .status-bar {
   font-size: 0.8rem;
   color: #666;
