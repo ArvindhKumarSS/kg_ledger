@@ -1,5 +1,13 @@
 [
   {
+    "date": "2026-03-21",
+    "creditAmount": 6000,
+    "details": "IMPS/608014225538/RAMESHK/FDRL/XXXXXX8090/3C Fe",
+    "sourceUpload": "2026-08-19T12-38-31-791Z",
+    "txnId": "6ddb5d3f38d08f70",
+    "mappingKey": "rameshk fdrl"
+  },
+  {
     "date": "2026-04-04",
     "creditAmount": 3000,
     "details": "IMPS/609421358187/RAMESHK/FDRL/XXXXXX8090/3C",
@@ -29,6 +37,14 @@
     "details": "NEFT-ICIC-IN12618745355399-LIMA ROSE",
     "sourceUpload": "2026-08-09T04-13-00-031Z",
     "txnId": "0fba531359115229",
+    "mappingKey": "lima rose"
+  },
+  {
+    "date": "2026-08-06",
+    "creditAmount": 3000,
+    "details": "NEFT-ICIC-IN12621849945711-LIMA ROSE",
+    "sourceUpload": "2026-08-19T12-38-31-791Z",
+    "txnId": "a73e706ca9023524",
     "mappingKey": "lima rose"
   }
 ]

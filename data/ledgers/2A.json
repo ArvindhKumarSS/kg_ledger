@@ -22,5 +22,13 @@
     "sourceUpload": "2026-08-09T04-13-00-031Z",
     "txnId": "93496670b70a45b5",
     "mappingKey": "lalitha icic"
+  },
+  {
+    "date": "2026-07-27",
+    "creditAmount": 4025,
+    "details": "IMPS/620820965915/LALITHA/ICIC/XXXXXX6363/July",
+    "sourceUpload": "2026-08-19T12-38-31-791Z",
+    "txnId": "5f1ace8eb2052cf1",
+    "mappingKey": "lalitha icic"
   }
 ]

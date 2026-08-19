@@ -1,5 +1,13 @@
 [
   {
+    "date": "2026-03-01",
+    "creditAmount": 3525,
+    "details": "NEFT-SBIN-SBIN326060456315-Mr J MICH-/ATTN//INB",
+    "sourceUpload": "2026-08-19T12-38-31-791Z",
+    "txnId": "7d673226ade48699",
+    "mappingKey": "mr j mich attn inb"
+  },
+  {
     "date": "2026-04-02",
     "creditAmount": 3525,
     "details": "NEFT-SBIN-SBIN426092683686-Mr J MICH-/ATTN//INB",
@@ -29,6 +37,14 @@
     "details": "IMPS/618209867399/J MICHA/SBIN/XXXXXX3811/1EMai",
     "sourceUpload": "2026-08-09T04-13-00-031Z",
     "txnId": "f02c7dfe7c5c8368",
+    "mappingKey": "j micha sbin"
+  },
+  {
+    "date": "2026-08-01",
+    "creditAmount": 3525,
+    "details": "IMPS/621318635305/J MICHA/SBIN/XXXXXX3811/1EMai",
+    "sourceUpload": "2026-08-19T12-38-31-791Z",
+    "txnId": "a6b3a421d5f53f0f",
     "mappingKey": "j micha sbin"
   }
 ]

@@ -390,5 +390,157 @@
     "category": "",
     "sourceUpload": "2026-08-09T04-13-00-031Z",
     "txnId": "f6972f0f3fbdfb8f"
+  },
+  {
+    "date": "2026-03-02",
+    "debitAmount": 5432,
+    "details": "TO CASH MARIYA SELVI",
+    "category": "Salaries",
+    "sourceUpload": "2026-08-19T12-38-31-791Z",
+    "txnId": "6633dd995bdd4508"
+  },
+  {
+    "date": "2026-03-02",
+    "debitAmount": 5432,
+    "details": "TO CASH M KUMARI",
+    "category": "Salaries",
+    "sourceUpload": "2026-08-19T12-38-31-791Z",
+    "txnId": "dbd8bf939a4238bf"
+  },
+  {
+    "date": "2026-03-03",
+    "debitAmount": 5266,
+    "details": "TO CASH DHANAMARY CHINNAPARAJ",
+    "category": "Salaries",
+    "sourceUpload": "2026-08-19T12-38-31-791Z",
+    "txnId": "e52d6bad11bc9d4a"
+  },
+  {
+    "date": "2026-03-03",
+    "debitAmount": 8000,
+    "details": "JOHNPAUL P V",
+    "category": "",
+    "sourceUpload": "2026-08-19T12-38-31-791Z",
+    "txnId": "f98d4b7b6eddb727"
+  },
+  {
+    "date": "2026-03-04",
+    "debitAmount": 5266,
+    "details": "TO CASH SAMMANASU MARY",
+    "category": "Salaries",
+    "sourceUpload": "2026-08-19T12-38-31-791Z",
+    "txnId": "3bcd4244492415e7"
+  },
+  {
+    "date": "2026-03-05",
+    "debitAmount": 22818,
+    "details": "J N AMROLIA",
+    "category": "",
+    "sourceUpload": "2026-08-19T12-38-31-791Z",
+    "txnId": "217917f6c6bc88bc"
+  },
+  {
+    "date": "2026-03-09",
+    "debitAmount": 68529,
+    "details": "RHINO SENTINEL AND ALLIE",
+    "category": "Security",
+    "sourceUpload": "2026-08-19T12-38-31-791Z",
+    "txnId": "0efd0c2abb312f66"
+  },
+  {
+    "date": "2026-03-09",
+    "debitAmount": 25000,
+    "details": "TO CASH BABU",
+    "category": "Salaries",
+    "sourceUpload": "2026-08-19T12-38-31-791Z",
+    "txnId": "dbdf3d074758d300"
+  },
+  {
+    "date": "2026-03-10",
+    "debitAmount": 43660,
+    "details": "VELSINE TECHNOLOGIES PRI",
+    "category": "",
+    "sourceUpload": "2026-08-19T12-38-31-791Z",
+    "txnId": "517651f07f592deb"
+  },
+  {
+    "date": "2026-03-18",
+    "debitAmount": 20000,
+    "details": "TO CASH BABU",
+    "category": "Salaries",
+    "sourceUpload": "2026-08-19T12-38-31-791Z",
+    "txnId": "2f8349b1c787cbd6"
+  },
+  {
+    "date": "2026-03-20",
+    "debitAmount": 4400,
+    "details": "WATER POWER AGENCIES",
+    "category": "",
+    "sourceUpload": "2026-08-19T12-38-31-791Z",
+    "txnId": "ec5abb7c7e47e04a"
+  },
+  {
+    "date": "2026-03-25",
+    "debitAmount": 59,
+    "details": "PCBHomeDeliveryChrgs",
+    "category": "Bank Charges",
+    "sourceUpload": "2026-08-19T12-38-31-791Z",
+    "txnId": "8083e6b13d7a507c"
+  },
+  {
+    "date": "2026-07-24",
+    "debitAmount": 128.91,
+    "details": "CHRGS- SMS ALERT APR TO JUN 2026",
+    "category": "Bank Charges",
+    "sourceUpload": "2026-08-19T12-38-31-791Z",
+    "txnId": "9bf7d277855149c2"
+  },
+  {
+    "date": "2026-07-27",
+    "debitAmount": 60000,
+    "details": "ELITE INTEGRATED AQUA MA",
+    "category": "",
+    "sourceUpload": "2026-08-19T12-38-31-791Z",
+    "txnId": "1052df62ec91531c"
+  },
+  {
+    "date": "2026-08-04",
+    "debitAmount": 6000,
+    "details": "SAMMANASU MARY",
+    "category": "",
+    "sourceUpload": "2026-08-19T12-38-31-791Z",
+    "txnId": "fd4122f23f6425a3"
+  },
+  {
+    "date": "2026-08-04",
+    "debitAmount": 6000,
+    "details": "KUMARI",
+    "category": "",
+    "sourceUpload": "2026-08-19T12-38-31-791Z",
+    "txnId": "5d3999796879be51"
+  },
+  {
+    "date": "2026-08-05",
+    "debitAmount": 6000,
+    "details": "TO CASH THANA MARY",
+    "category": "Salaries",
+    "sourceUpload": "2026-08-19T12-38-31-791Z",
+    "txnId": "7ee8b7dd3fa89354"
+  },
+  {
+    "date": "2026-08-11",
+    "debitAmount": 70600,
+    "details": "RHINO SENTINEL AND ALLIE",
+    "category": "Security",
+    "sourceUpload": "2026-08-19T12-38-31-791Z",
+    "txnId": "a8cfd56e7086671b"
+  },
+  {
+    "date": "2026-08-17",
+    "debitAmount": 10000,
+    "details": "S RAGHU",
+    "category": "",
+    "sourceUpload": "2026-08-19T12-38-31-791Z",
+    "txnId": "44517b6bf63652e8"
   }
 ]
