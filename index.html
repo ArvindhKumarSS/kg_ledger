@@ -211,6 +211,10 @@
           <select id="browse-apartment"></select>
         </label>
       </div>
+      <div id="apt-dues-panel" class="apt-dues-panel hidden">
+        <div class="summary-grid" id="apt-dues-grid"></div>
+        <div class="muted" id="apt-dues-note"></div>
+      </div>
       <div class="table-wrap">
         <table id="browse-table">
           <thead id="browse-thead"></thead>
@@ -255,6 +259,30 @@
           <input type="text" id="new-apt" placeholder="e.g. P2A" maxlength="6">
         </label>
         <button class="btn btn-secondary" id="add-apt-btn">Add</button>
+      </div>
+
+      <div class="section-title">Apartment area &amp; maintenance rate</div>
+      <p class="muted pending-intro">
+        Monthly due = Sq.Ft × Rate. Expected collection uses billing start through the latest statement date.
+      </p>
+      <div class="form-row">
+        <label>
+          Billing start month
+          <input type="month" id="billing-start-month">
+        </label>
+      </div>
+      <div class="table-wrap rates-table-wrap">
+        <table id="apt-rates-table">
+          <thead>
+            <tr>
+              <th>Apartment</th>
+              <th>Sq.Ft</th>
+              <th>Rate (₹ / Sq.Ft)</th>
+              <th>Monthly due</th>
+            </tr>
+          </thead>
+          <tbody id="apt-rates-tbody"></tbody>
+        </table>
       </div>
 
       <div class="section-title">Expense categories</div>

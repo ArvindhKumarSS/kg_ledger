@@ -11,6 +11,7 @@ A static web app for maintaining apartment maintenance ledgers from Indian Overs
 - Transactions tab — cumulative unique committed transactions; correct apartment/category tags anytime
 - Loads from GitHub API when a PAT is configured (avoids GitHub Pages CDN cache lag)
 - Per-apartment credit ledgers (Date, Amount, Details)
+- Apartment Sq.Ft + rate (₹/Sq.Ft) in Settings; dues / collected / deficit on Browse
 - Expenditure ledger for debits with optional categories
 - Separate interest credit tracking
 - Data stored as JSON files in git
@@ -67,7 +68,7 @@ Note: ES modules and pdf.js CDN require serving over HTTP (not `file://`).
 
 ```
 data/
-├── config.json              # Apartments, expense categories
+├── config.json              # Apartments, expense categories, Sq.Ft/rates, billing start
 ├── mappings/accounts.json   # Payer → apartment mapping
 ├── ledgers/1A.json …        # One file per apartment
 ├── expenditures.json

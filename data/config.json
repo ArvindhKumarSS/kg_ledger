@@ -47,5 +47,156 @@
     "Salaries",
     "Bank Charges",
     "Misc"
-  ]
+  ],
+  "billingStartMonth": "2026-03",
+  "apartmentRates": {
+    "1A": {
+      "sqFt": 1610,
+      "ratePerSqFt": 2.5
+    },
+    "1B": {
+      "sqFt": 1160,
+      "ratePerSqFt": 2.5
+    },
+    "1C": {
+      "sqFt": 1200,
+      "ratePerSqFt": 2.5
+    },
+    "1D": {
+      "sqFt": 1200,
+      "ratePerSqFt": 2.5
+    },
+    "1E": {
+      "sqFt": 1410,
+      "ratePerSqFt": 2.5
+    },
+    "1F": {
+      "sqFt": 0,
+      "ratePerSqFt": 2.5
+    },
+    "1FA": {
+      "sqFt": 1695,
+      "ratePerSqFt": 2.5
+    },
+    "1FB": {
+      "sqFt": 1695,
+      "ratePerSqFt": 2.5
+    },
+    "1G": {
+      "sqFt": 3390,
+      "ratePerSqFt": 2.5
+    },
+    "2A": {
+      "sqFt": 1610,
+      "ratePerSqFt": 2.5
+    },
+    "2B": {
+      "sqFt": 1160,
+      "ratePerSqFt": 2.5
+    },
+    "2C": {
+      "sqFt": 1200,
+      "ratePerSqFt": 2.5
+    },
+    "2D": {
+      "sqFt": 1200,
+      "ratePerSqFt": 2.5
+    },
+    "2E": {
+      "sqFt": 1410,
+      "ratePerSqFt": 2.5
+    },
+    "2F": {
+      "sqFt": 0,
+      "ratePerSqFt": 2.5
+    },
+    "2G": {
+      "sqFt": 0,
+      "ratePerSqFt": 2.5
+    },
+    "3A": {
+      "sqFt": 2005,
+      "ratePerSqFt": 2.5
+    },
+    "3B": {
+      "sqFt": 765,
+      "ratePerSqFt": 2.5
+    },
+    "3C": {
+      "sqFt": 1200,
+      "ratePerSqFt": 2.5
+    },
+    "3D": {
+      "sqFt": 1200,
+      "ratePerSqFt": 2.5
+    },
+    "3E": {
+      "sqFt": 1410,
+      "ratePerSqFt": 2.5
+    },
+    "3F": {
+      "sqFt": 1695,
+      "ratePerSqFt": 2.5
+    },
+    "3G": {
+      "sqFt": 1695,
+      "ratePerSqFt": 2.5
+    },
+    "4A": {
+      "sqFt": 1610,
+      "ratePerSqFt": 2.5
+    },
+    "4B": {
+      "sqFt": 1800,
+      "ratePerSqFt": 2.5
+    },
+    "4C": {
+      "sqFt": 0,
+      "ratePerSqFt": 2.5
+    },
+    "4D": {
+      "sqFt": 1760,
+      "ratePerSqFt": 2.5
+    },
+    "4E": {
+      "sqFt": 1410,
+      "ratePerSqFt": 2.5
+    },
+    "4F": {
+      "sqFt": 1695,
+      "ratePerSqFt": 2.5
+    },
+    "4G": {
+      "sqFt": 1695,
+      "ratePerSqFt": 2.5
+    },
+    "5A": {
+      "sqFt": 1918,
+      "ratePerSqFt": 2.5
+    },
+    "5B": {
+      "sqFt": 1468,
+      "ratePerSqFt": 2.5
+    },
+    "5C": {
+      "sqFt": 1480,
+      "ratePerSqFt": 2.5
+    },
+    "5D": {
+      "sqFt": 1480,
+      "ratePerSqFt": 2.5
+    },
+    "5E": {
+      "sqFt": 1660,
+      "ratePerSqFt": 2.5
+    },
+    "5F": {
+      "sqFt": 1945,
+      "ratePerSqFt": 2.5
+    },
+    "5G": {
+      "sqFt": 1945,
+      "ratePerSqFt": 2.5
+    }
+  }
 }
