@@ -542,7 +542,7 @@ async function handleSaveTxnTags() {
   const debitEdits = corrections.filter((c) => c.origin === 'expenditure').length;
   const msg =
     `Save ${corrections.length} correction(s)?` +
-    (creditMoves ? `\n• ${creditMoves} mapped credit(s) will move apartment (and update payer mapping)` : '') +
+    (creditMoves ? `\n• ${creditMoves} mapped credit(s) will move apartment (only those rows)` : '') +
     (pendingEdits ? `\n• ${pendingEdits} pending credit(s)` : '') +
     (debitEdits ? `\n• ${debitEdits} debit categor${debitEdits === 1 ? 'y' : 'ies'}` : '');
   if (!confirm(msg)) return;

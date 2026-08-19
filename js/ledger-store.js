@@ -220,7 +220,8 @@ function sortLedgerRows(rows) {
 
 /**
  * Place specific transactions under the apartment chosen in review.
- * Used when re-uploading (dups) or for bulk cash that has no shared payer map.
+ * Used when re-uploading (dups), bulk cash, or Transactions-tab corrections.
+ * When move.manualTag is set, the row is pinned so payer-map reapply won't move it.
  */
 export function applyTxnRelocations(ledgers, relocations) {
   if (!relocations?.length) return ledgers;
@@ -246,6 +247,7 @@ export function applyTxnRelocations(ledgers, relocations) {
           ? {
               ...row,
               mappingKey: move.mappingKey || row.mappingKey || entryMappingKey(row),
+              ...(move.manualTag ? { manualTag: true } : {}),
             }
           : row
       );
@@ -261,6 +263,7 @@ export function applyTxnRelocations(ledgers, relocations) {
 /**
  * Move existing apartment credits to match accounts.json mappings.
  * Applies to past rows (by mappingKey/details) so a new tag updates history.
+ * Rows with manualTag (corrected on Transactions tab) stay put.
  */
 export function reapplyAccountMappings(ledgers, accounts, apartments = null) {
   const aptSet = apartments ? new Set(apartments) : null;
@@ -272,6 +275,12 @@ export function reapplyAccountMappings(ledgers, accounts, apartments = null) {
   for (const [apt, rows] of Object.entries(ledgers || {})) {
     for (const row of rows) {
       const key = entryMappingKey(row);
+      // Explicit per-txn corrections must not be moved by shared payer maps
+      if (row.manualTag) {
+        if (!next[apt]) next[apt] = [];
+        next[apt].push({ ...row, mappingKey: key || row.mappingKey });
+        continue;
+      }
       // Bulk cash is tagged per deposit — do not move via shared payer maps
       const bulkCash = /^BY CASH KG SRIVATSA/i.test(row.details || '');
       const mapped = !bulkCash && key ? accounts[key] : null;
@@ -286,6 +295,23 @@ export function reapplyAccountMappings(ledgers, accounts, apartments = null) {
 
   for (const apt of Object.keys(next)) {
     next[apt] = sortLedgerRows(next[apt]);
+  }
+  return next;
+}
+
+/** If every ledger row for a mappingKey sits in one apartment, sync accounts.json */
+function syncUnambiguousAccountMappings(ledgers, accounts, keys) {
+  const next = { ...accounts };
+  for (const key of keys || []) {
+    if (!key) continue;
+    const apts = new Set();
+    for (const [apt, rows] of Object.entries(ledgers || {})) {
+      for (const row of rows || []) {
+        if (/^BY CASH KG SRIVATSA/i.test(row.details || '')) continue;
+        if (entryMappingKey(row) === key) apts.add(apt);
+      }
+    }
+    if (apts.size === 1) next[key] = [...apts][0];
   }
   return next;
 }
@@ -505,8 +531,9 @@ export function collectAllTransactions(data) {
 
 /**
  * Apply apartment/category corrections from the Transactions tab.
- * Credit retags relocate the txn and update payer→apartment mappings
- * (which also reassigns matching historical ledger rows).
+ * Credit retags move ONLY the edited txnIds (pinned with manualTag).
+ * Does not cascade other ledger rows that share the same payer mappingKey.
+ * accounts.json is updated only when every row for that key agrees on one apartment.
  */
 export function applyTagCorrections(data, corrections) {
   const edits = (corrections || []).filter((e) => e?.txnId);
@@ -528,17 +555,15 @@ export function applyTagCorrections(data, corrections) {
   }
 
   const relocations = [];
-  const newMappings = {};
+  const touchedKeys = new Set();
 
   for (const edit of edits) {
     if (edit.origin === 'ledger') {
       const apartment = edit.apartment || null;
       if (!apartment) continue;
       const mappingKey = edit.mappingKey || extractMappingKey(edit.details || '');
-      relocations.push({ txnId: edit.txnId, apartment, mappingKey });
-      if (edit.type === 'credit' && mappingKey) {
-        newMappings[mappingKey] = apartment;
-      }
+      relocations.push({ txnId: edit.txnId, apartment, mappingKey, manualTag: true });
+      if (mappingKey) touchedKeys.add(mappingKey);
       continue;
     }
 
@@ -549,9 +574,13 @@ export function applyTagCorrections(data, corrections) {
       row.apartment = apartment;
       row.skipped = !apartment;
       row.needsReview = !apartment;
+      // Pending tags may set future auto-map; they don't cascade existing ledgers here
       if (apartment && row.txnType === 'credit') {
         const mappingKey = row.mappingKey || extractMappingKey(row.details || '');
-        if (mappingKey) newMappings[mappingKey] = apartment;
+        if (mappingKey) {
+          next.accounts[mappingKey] = apartment;
+          touchedKeys.add(mappingKey);
+        }
       }
       continue;
     }
@@ -563,12 +592,8 @@ export function applyTagCorrections(data, corrections) {
     }
   }
 
-  next.accounts = { ...next.accounts, ...newMappings };
+  // Move only the edited transactions — never reapply payer maps across the whole ledger
   next.ledgers = applyTxnRelocations(next.ledgers, relocations);
-  next.ledgers = reapplyAccountMappings(
-    next.ledgers,
-    next.accounts,
-    next.config?.apartments
-  );
+  next.accounts = syncUnambiguousAccountMappings(next.ledgers, next.accounts, [...touchedKeys]);
   return next;
 }
