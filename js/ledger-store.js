@@ -400,6 +400,10 @@ export function addApartment(config, ledgers, aptId) {
     return a.slice(1).localeCompare(b.slice(1));
   });
   ledgers[id] = [];
+  if (!config.apartmentRates) config.apartmentRates = {};
+  if (!config.apartmentRates[id]) {
+    config.apartmentRates[id] = { sqFt: 0, ratePerSqFt: 2.5 };
+  }
   return id;
 }
 
@@ -409,6 +413,76 @@ export function removeApartment(config, ledgers, aptId) {
   }
   config.apartments = config.apartments.filter((a) => a !== aptId);
   delete ledgers[aptId];
+  if (config.apartmentRates) delete config.apartmentRates[aptId];
+}
+
+/** Inclusive month count between YYYY-MM values (or ISO dates). */
+export function monthsInclusive(startYm, endYm) {
+  if (!startYm || !endYm) return 0;
+  const s = String(startYm).slice(0, 7);
+  const e = String(endYm).slice(0, 7);
+  const [sy, sm] = s.split('-').map(Number);
+  const [ey, em] = e.split('-').map(Number);
+  if (![sy, sm, ey, em].every(Number.isFinite)) return 0;
+  const diff = (ey - sy) * 12 + (em - sm) + 1;
+  return diff > 0 ? diff : 0;
+}
+
+/** Billing end month: latest statement txn date, else latest ledger credit, else today. */
+export function getBillingEndMonth(data) {
+  const balDate = data?.accountBalance?.lastTransactionDate;
+  if (balDate) return String(balDate).slice(0, 7);
+
+  let max = null;
+  for (const rows of Object.values(data?.ledgers || {})) {
+    for (const row of rows || []) {
+      if (row?.date && (!max || row.date > max)) max = row.date;
+    }
+  }
+  if (max) return max.slice(0, 7);
+
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+}
+
+/**
+ * Dues snapshot for one apartment.
+ * expected = sqFt * ratePerSqFt * months from billingStartMonth through billing end.
+ */
+export function computeApartmentDues(aptId, data) {
+  const rates = data?.config?.apartmentRates?.[aptId] || {};
+  const sqFt = Number(rates.sqFt) || 0;
+  const ratePerSqFt = Number(rates.ratePerSqFt) || 0;
+  const monthlyDue = sqFt * ratePerSqFt;
+  const billingStart = data?.config?.billingStartMonth || null;
+  const billingEnd = getBillingEndMonth(data);
+  const monthsDue = billingStart ? monthsInclusive(billingStart, billingEnd) : 0;
+  const expected = monthlyDue * monthsDue;
+  const rows = data?.ledgers?.[aptId] || [];
+  const collected = rows.reduce((s, r) => s + (Number(r.creditAmount) || 0), 0);
+  const deficit = expected - collected;
+  return {
+    aptId,
+    sqFt,
+    ratePerSqFt,
+    monthlyDue,
+    billingStart,
+    billingEnd,
+    monthsDue,
+    expected,
+    collected,
+    deficit,
+  };
+}
+
+export function ensureApartmentRates(config) {
+  if (!config.apartmentRates) config.apartmentRates = {};
+  if (!config.billingStartMonth) config.billingStartMonth = '2026-03';
+  for (const apt of config.apartments || []) {
+    if (!config.apartmentRates[apt]) {
+      config.apartmentRates[apt] = { sqFt: 0, ratePerSqFt: 2.5 };
+    }
+  }
 }
 
 /** Closing balance and last txn date from a parsed statement */

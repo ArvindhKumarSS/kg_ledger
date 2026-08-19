@@ -18,6 +18,8 @@ import {
   pendingReadyToImport,
   collectAllTransactions,
   applyTagCorrections,
+  computeApartmentDues,
+  ensureApartmentRates,
 } from './ledger-store.js';
 import { formatAmount, formatDisplayDate, escapeHtml, getCookie, setCookie } from './utils.js';
 
@@ -110,6 +112,7 @@ function applyLoadedData(data, { keepTxnEdits = false } = {}) {
   state.data = data;
   if (!keepTxnEdits) state.txnEdits = new Map();
   if (!Array.isArray(state.data.pendingCredits)) state.data.pendingCredits = [];
+  ensureApartmentRates(state.data.config);
   state.data.pendingCredits = suggestPendingApartments(
     state.data.pendingCredits,
     state.data.accounts,
@@ -124,6 +127,7 @@ function applyLoadedData(data, { keepTxnEdits = false } = {}) {
   // Always refresh filter option lists when data arrives (even if tab not active yet)
   populateTxnFilterOptions();
   if ($('#panel-transactions')?.classList.contains('active')) renderTransactions();
+  if ($('#panel-browse')?.classList.contains('active')) renderBrowse();
 }
 
 async function reloadData({ requireApi = false } = {}) {
@@ -994,22 +998,61 @@ async function handleDismissPending() {
   }
 }
 
+function renderAptDues(apt) {
+  const panel = $('#apt-dues-panel');
+  const grid = $('#apt-dues-grid');
+  const note = $('#apt-dues-note');
+  if (!panel || !grid || !note) return;
+
+  const dues = computeApartmentDues(apt, state.data);
+  if (!dues.sqFt || !dues.ratePerSqFt) {
+    panel.classList.remove('hidden');
+    grid.innerHTML = `
+      <div class="summary-card"><div class="num">—</div><div class="lbl">Sq.Ft</div></div>
+      <div class="summary-card"><div class="num">—</div><div class="lbl">Rate / Sq.Ft</div></div>
+      <div class="summary-card"><div class="num">₹ ${formatAmount(dues.collected)}</div><div class="lbl">Collected</div></div>
+    `;
+    note.textContent = 'Set Sq.Ft and rate for this apartment in Settings to see expected dues and deficit.';
+    return;
+  }
+
+  const deficitClass =
+    dues.deficit > 0.009 ? 'deficit' : dues.deficit < -0.009 ? 'surplus' : '';
+  const deficitLabel = dues.deficit > 0.009 ? 'Deficit' : dues.deficit < -0.009 ? 'Surplus' : 'Balanced';
+  const deficitAbs = Math.abs(dues.deficit);
+
+  panel.classList.remove('hidden');
+  grid.innerHTML = `
+    <div class="summary-card"><div class="num">${dues.sqFt.toLocaleString('en-IN')}</div><div class="lbl">Sq.Ft</div></div>
+    <div class="summary-card"><div class="num">₹ ${formatAmount(dues.ratePerSqFt)}</div><div class="lbl">Rate / Sq.Ft</div></div>
+    <div class="summary-card"><div class="num">₹ ${formatAmount(dues.monthlyDue)}</div><div class="lbl">Monthly due</div></div>
+    <div class="summary-card"><div class="num">₹ ${formatAmount(dues.expected)}</div><div class="lbl">Expected (${dues.monthsDue} mo)</div></div>
+    <div class="summary-card"><div class="num">₹ ${formatAmount(dues.collected)}</div><div class="lbl">Collected</div></div>
+    <div class="summary-card ${deficitClass}"><div class="num">₹ ${formatAmount(deficitAbs)}</div><div class="lbl">${deficitLabel}</div></div>
+  `;
+  note.textContent = `Billing ${dues.billingStart || '—'} → ${dues.billingEnd || '—'} · Expected = Sq.Ft × Rate × months`;
+}
+
 function renderBrowseApartments() {
   const sel = $('#browse-apartment');
+  const current = sel.value;
   sel.innerHTML = (state.data?.config?.apartments || [])
     .map((a) => `<option value="${a}">${a}</option>`)
     .join('');
+  if (current && [...sel.options].some((o) => o.value === current)) sel.value = current;
 }
 
 function renderBrowse() {
   const view = $('#browse-view').value;
   const thead = $('#browse-thead');
   const tbody = $('#browse-tbody');
+  const duesPanel = $('#apt-dues-panel');
   $('#apt-select-label').classList.toggle('hidden', view !== 'apartment');
 
   if (view === 'apartment') {
     const apt = $('#browse-apartment').value;
     const rows = state.data?.ledgers?.[apt] || [];
+    renderAptDues(apt);
     thead.innerHTML = '<tr><th>Date</th><th>Credit amount</th><th>Transaction details</th></tr>';
     tbody.innerHTML =
       rows.length === 0
@@ -1024,8 +1067,16 @@ function renderBrowse() {
             )
             .join('');
     const total = rows.reduce((s, r) => s + r.creditAmount, 0);
-    $('#browse-summary').textContent = `${apt}: ${rows.length} payments, total ₹${formatAmount(total)}`;
+    const dues = computeApartmentDues(apt, state.data);
+    $('#browse-summary').textContent =
+      `${apt}: ${rows.length} payments, collected ₹${formatAmount(total)}` +
+      (dues.sqFt
+        ? ` · expected ₹${formatAmount(dues.expected)} · ${
+            dues.deficit >= 0 ? 'deficit' : 'surplus'
+          } ₹${formatAmount(Math.abs(dues.deficit))}`
+        : '');
   } else if (view === 'expenditures') {
+    duesPanel?.classList.add('hidden');
     const rows = state.data?.expenditures || [];
     thead.innerHTML = '<tr><th>Date</th><th>Debit amount</th><th>Details</th><th>Category</th></tr>';
     tbody.innerHTML =
@@ -1044,6 +1095,7 @@ function renderBrowse() {
     const total = rows.reduce((s, r) => s + r.debitAmount, 0);
     $('#browse-summary').textContent = `${rows.length} expenditures, total ₹${formatAmount(total)}`;
   } else {
+    duesPanel?.classList.add('hidden');
     const rows = state.data?.interest || [];
     thead.innerHTML = '<tr><th>Date</th><th>Amount</th><th>Details</th></tr>';
     tbody.innerHTML =
@@ -1062,6 +1114,60 @@ function renderBrowse() {
   }
 }
 
+function renderApartmentRatesEditor() {
+  const tbody = $('#apt-rates-tbody');
+  const startInput = $('#billing-start-month');
+  if (!tbody) return;
+
+  ensureApartmentRates(state.data.config);
+  if (startInput) startInput.value = state.data.config.billingStartMonth || '';
+
+  const apts = state.data.config.apartments || [];
+  tbody.innerHTML = apts
+    .map((apt) => {
+      const rate = state.data.config.apartmentRates[apt] || { sqFt: 0, ratePerSqFt: 2.5 };
+      const monthly = (Number(rate.sqFt) || 0) * (Number(rate.ratePerSqFt) || 0);
+      return `<tr data-apt="${escapeHtml(apt)}">
+        <td>${escapeHtml(apt)}</td>
+        <td><input type="number" min="0" step="1" class="rate-sqft" data-apt="${escapeHtml(apt)}" value="${Number(rate.sqFt) || 0}"></td>
+        <td><input type="number" min="0" step="0.01" class="rate-per-sqft" data-apt="${escapeHtml(apt)}" value="${Number(rate.ratePerSqFt) || 0}"></td>
+        <td class="amount rate-monthly">${formatAmount(monthly)}</td>
+      </tr>`;
+    })
+    .join('');
+
+  const syncMonthly = (apt) => {
+    const row = tbody.querySelector(`tr[data-apt="${apt}"]`);
+    if (!row) return;
+    const r = state.data.config.apartmentRates[apt] || { sqFt: 0, ratePerSqFt: 0 };
+    row.querySelector('.rate-monthly').textContent = formatAmount(
+      (Number(r.sqFt) || 0) * (Number(r.ratePerSqFt) || 0)
+    );
+  };
+
+  tbody.querySelectorAll('.rate-sqft').forEach((input) => {
+    input.addEventListener('change', (e) => {
+      const apt = e.target.dataset.apt;
+      if (!state.data.config.apartmentRates[apt]) {
+        state.data.config.apartmentRates[apt] = { sqFt: 0, ratePerSqFt: 2.5 };
+      }
+      state.data.config.apartmentRates[apt].sqFt = Number(e.target.value) || 0;
+      syncMonthly(apt);
+    });
+  });
+
+  tbody.querySelectorAll('.rate-per-sqft').forEach((input) => {
+    input.addEventListener('change', (e) => {
+      const apt = e.target.dataset.apt;
+      if (!state.data.config.apartmentRates[apt]) {
+        state.data.config.apartmentRates[apt] = { sqFt: 0, ratePerSqFt: 2.5 };
+      }
+      state.data.config.apartmentRates[apt].ratePerSqFt = Number(e.target.value) || 0;
+      syncMonthly(apt);
+    });
+  });
+}
+
 function renderSettingsTags() {
   const apts = state.data?.config?.apartments || [];
   $('#apt-tags').innerHTML = apts
@@ -1076,6 +1182,7 @@ function renderSettingsTags() {
       try {
         removeApartment(state.data.config, state.data.ledgers, btn.dataset.rmApt);
         renderSettingsTags();
+        renderBrowseApartments();
       } catch (e) {
         alert(e.message);
       }
@@ -1098,6 +1205,8 @@ function renderSettingsTags() {
       renderSettingsTags();
     });
   });
+
+  renderApartmentRatesEditor();
 }
 
 async function saveConfigToGitHub() {
@@ -1125,6 +1234,7 @@ async function saveConfigToGitHub() {
     $('#settings-status').textContent = 'Saved';
     renderSettingsTags();
     renderBrowseApartments();
+    if ($('#panel-browse')?.classList.contains('active')) renderBrowse();
   } catch (e) {
     $('#settings-status').textContent = `Error: ${e.message}`;
   }
@@ -1168,6 +1278,10 @@ function initSettings() {
     } catch (e) {
       alert(e.message);
     }
+  });
+
+  $('#billing-start-month')?.addEventListener('change', (e) => {
+    state.data.config.billingStartMonth = e.target.value || null;
   });
 
   $('#add-cat-btn').addEventListener('click', () => {
