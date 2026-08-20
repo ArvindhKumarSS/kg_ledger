@@ -30,21 +30,6 @@
     "addedAt": "2026-08-19T12:38:32.827Z"
   },
   {
-    "txnId": "d97f41da349ab38d",
-    "date": "2026-03-03",
-    "creditAmount": 4238,
-    "details": "By T K ARUN-NET@481776",
-    "chequeNumber": "",
-    "mappingKey": "t k arun net@481776",
-    "txnType": "credit",
-    "sourceUpload": "2026-08-19T12-38-31-791Z",
-    "fileName": "3443 JUNE.pdf",
-    "skipped": false,
-    "apartment": null,
-    "needsReview": true,
-    "addedAt": "2026-08-19T12:38:32.827Z"
-  },
-  {
     "txnId": "a16f5ce3c1e359ba",
     "date": "2026-03-07",
     "creditAmount": 3525,
