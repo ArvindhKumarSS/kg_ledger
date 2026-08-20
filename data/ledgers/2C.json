@@ -48,6 +48,14 @@
     "mappingKey": "mohammed z others mai"
   },
   {
+    "date": "2026-08-10",
+    "creditAmount": 100000,
+    "details": "BY CLG: 000429-1643-10-08-2026",
+    "sourceUpload": "2026-08-19T12-38-31-791Z",
+    "txnId": "a6b5ecb1d9f57770",
+    "mappingKey": "clg 000429 1643 10 08 2026"
+  },
+  {
     "date": "2026-08-15",
     "creditAmount": 3000,
     "details": "NEFT-UTIB-AXOMB22702004680-MOHAMMED Z-OTHERS-MAI",

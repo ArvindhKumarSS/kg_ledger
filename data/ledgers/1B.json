@@ -46,5 +46,13 @@
     "sourceUpload": "2026-08-09T04-13-00-031Z",
     "txnId": "2a10f0ebe0a7cb98",
     "mappingKey": "mr r s mangala"
+  },
+  {
+    "date": "2026-08-13",
+    "creditAmount": 2900,
+    "details": "UPI/622527846437/CR/MANGALA KUMAR /SBI/AUGUST 20",
+    "sourceUpload": "2026-08-19T12-38-31-791Z",
+    "txnId": "d391f5349e1a544e",
+    "mappingKey": "mangala kumar"
   }
 ]

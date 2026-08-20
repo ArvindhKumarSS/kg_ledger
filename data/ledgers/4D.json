@@ -1,1 +1,18 @@
-[]
+[
+  {
+    "date": "2026-03-18",
+    "creditAmount": 20000,
+    "details": "IMPS/607798546269/VIVEKAN/UTIB/XXXXXX1034/IMPS",
+    "sourceUpload": "2026-08-19T12-38-31-791Z",
+    "txnId": "80499558dd5c514c",
+    "mappingKey": "vivekan utib"
+  },
+  {
+    "date": "2026-08-15",
+    "creditAmount": 50000,
+    "details": "IMPS/622703268637/VIVEKAN/UTIB/XXXXXX1034/IMPS",
+    "sourceUpload": "2026-08-19T12-38-31-791Z",
+    "txnId": "7167c8528a574e19",
+    "mappingKey": "vivekan utib"
+  }
+]
