@@ -5,7 +5,6 @@ import { parseIndianAmount, toIsoDate } from './utils.js';
 const SKIP_PATTERNS = [
   /^INDIAN OVERSEAS BANK/i,
   /^TYPE:/i,
-  /^A\/C NO:/i,
   /^M\/S\./i,
   /^CKYC ID:/i,
   /^9 SOUTH AVENUE/i,
@@ -141,8 +140,14 @@ export async function parsePdfFile(file, pdfjsLib) {
   const parseWarnings = [];
   let openingBalance = null;
   let prevBalance = null;
+  let accountNumber = null;
 
   for (const line of allLines) {
+    if (/^A\/C NO:/i.test(line)) {
+      const acMatch = line.match(/^A\/C NO:\s*(\S+)/i);
+      if (acMatch) accountNumber = acMatch[1];
+      continue;
+    }
     if (shouldSkip(line)) continue;
 
     const parsed = parseLine(line);
@@ -188,5 +193,5 @@ export async function parsePdfFile(file, pdfjsLib) {
     prevBalance = parsed.balance;
   }
 
-  return { transactions, openingBalance, parseWarnings };
+  return { transactions, openingBalance, parseWarnings, accountNumber };
 }

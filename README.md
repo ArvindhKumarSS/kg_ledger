@@ -1,19 +1,26 @@
-# KG Srivatsa Garden — Maintenance Ledger
+# KG Srivatsa Garden — Association Ledger
 
-A static web app for maintaining apartment maintenance ledgers from Indian Overseas Bank (IOB) monthly statements.
+A static web app for apartment association ledgers from Indian Overseas Bank (IOB) statements. The association keeps two bank accounts:
+
+- **Maintenance** — monthly dues
+- **Corpus** — one-time / capital collections (new lift, major works). Same upload, tagging, pending queue, transactions, browse, and expenditure features; not billed as monthly maintenance.
+
+Click the header cards to switch accounts. Upload uses the same review flow for whichever account is selected.
 
 ## Features
 
-- Upload IOB bank statement PDFs (parsed in browser)
-- Auto-map credit transactions to apartments via account mapping
-- Tag unmapped payers — saved for future statements
-- Pending credits queue — untagged/skipped credits persist across uploads and reloads
-- Transactions tab — cumulative unique committed transactions; correct apartment/category tags anytime
+- Upload IOB bank statement PDFs (parsed in browser) into maintenance or corpus
+- Optional IOB A/C numbers in Settings — the PDF A/C line auto-selects the account
+- Auto-map credit transactions to apartments via shared payer mapping
+- Tag unmapped payers — saved for future statements (both accounts)
+- Pending credits queue — untagged/skipped credits persist across uploads and reloads (per account)
+- Transactions tab — unique committed transactions for the selected account; correct apartment/category tags anytime
 - Loads from GitHub API when a PAT is configured (avoids GitHub Pages CDN cache lag)
-- Per-apartment credit ledgers (Date, Amount, Details)
-- Apartment Sq.Ft + rate (₹/Sq.Ft) in Settings; dues / collected / deficit on Browse
-- Expenditure ledger for debits with optional categories
-- Separate interest credit tracking
+- Per-apartment credit ledgers (Date, Amount, Details) for each account
+- Apartment Sq.Ft + rate (₹/Sq.Ft) in Settings; monthly dues / collected / deficit on Browse (maintenance)
+- One-time corpus due per apartment in Settings; collected vs due on Browse (corpus)
+- Expenditure ledger for debits with categories (maintenance vs corpus categories)
+- Separate interest credit tracking per account
 - Data stored as JSON files in git
 - Commit changes via GitHub API (Personal Access Token)
 
@@ -43,17 +50,18 @@ git push -u origin main
 
 ## Upload workflow
 
-1. Download an IOB statement PDF (any period — uploads are ad-hoc)
+1. Download an IOB statement PDF (maintenance or corpus — any period)
 2. Open the GitHub Pages site
 3. Go to **Settings**, enter your GitHub username, repo name, and PAT
-4. Go to **Upload**, optionally label the statement month, drop the PDF
-5. Review auto-mapped credits; tag any unmapped payers (or bulk cash) to apartments
-6. Assign categories to debits if needed
-7. Click **Commit to GitHub** — untagged or skipped credits are saved to **Pending credits** on the home page
+4. Optionally save the two IOB A/C numbers so future PDFs auto-select the account
+5. Go to **Upload**, pick **Maintenance** or **Corpus** (or click the header card), optionally label the statement month, drop the PDF
+6. Review auto-mapped credits; tag any unmapped payers (or bulk cash) to apartments
+7. Assign categories to debits if needed
+8. Click **Commit to GitHub** — untagged or skipped credits are saved to **Pending credits** for that account
 
 You can return later (even after reload or more uploads), tag pending rows, and click **Commit tagged pending**. Use **Dismiss selected** only to drop credits you never want to import.
 
-Transactions are stored by content hash (`date|amount|details|cheque`). Re-uploading the same statement (or overlapping statements) silently ignores duplicates and merges new rows. Tagging a payer to an apartment updates `mappings/accounts.json`, moves matching past ledger rows, and auto-maps future imports.
+Transactions are stored by content hash (`date|amount|details|cheque`). Corpus hashes are namespaced so the same line in both bank accounts cannot collide. Re-uploading the same statement (or overlapping statements) silently ignores duplicates and merges new rows. Tagging a payer to an apartment updates `mappings/accounts.json` (shared), moves matching past ledger rows **in that account**, and auto-maps future imports.
 
 ## Local development
 
@@ -68,13 +76,21 @@ Note: ES modules and pdf.js CDN require serving over HTTP (not `file://`).
 
 ```
 data/
-├── config.json              # Apartments, expense categories, Sq.Ft/rates, billing start
-├── mappings/accounts.json   # Payer → apartment mapping
-├── ledgers/1A.json …        # One file per apartment
-├── expenditures.json
+├── config.json                 # Apartments, categories, Sq.Ft/rates, corpus due, bank A/C nos
+├── mappings/accounts.json      # Payer → apartment mapping (shared)
+├── ledgers/1A.json …           # Maintenance credits per apartment
+├── expenditures.json           # Maintenance debits
 ├── interest.json
-├── pending-credits.json     # Untagged/skipped credits awaiting later tagging
-└── uploads/<id>.json        # Import audit log (month label or timestamp)
+├── pending-credits.json
+├── account-balance.json
+├── uploads/<id>.json
+└── corpus/
+    ├── ledgers/1A.json …       # Corpus credits per apartment
+    ├── expenditures.json
+    ├── interest.json
+    ├── pending-credits.json
+    ├── account-balance.json
+    └── uploads/<id>.json
 ```
 
 ## Apartments

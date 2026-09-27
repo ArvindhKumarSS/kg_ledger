@@ -46,13 +46,38 @@ header {
   font-size: 0.875rem;
 }
 
-.account-balance {
+.account-switcher {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  justify-content: flex-end;
+}
+
+.account-card {
   text-align: right;
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 6px;
   padding: 0.6rem 1rem;
-  min-width: 200px;
+  min-width: 180px;
+  color: inherit;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.account-card:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.account-card.active {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.55);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.25);
+  opacity: 1;
+}
+
+.account-card:not(.active) {
+  opacity: 0.78;
 }
 
 .balance-label {

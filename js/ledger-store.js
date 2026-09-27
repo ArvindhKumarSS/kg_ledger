@@ -2,6 +2,7 @@
 
 import { extractMappingKey } from './classifier.js';
 import { hashTxnId } from './utils.js';
+import { ACCOUNT_MAINTENANCE, accountFilePaths } from './account.js';
 
 function isApartmentCredit(txn) {
   return (
@@ -16,9 +17,13 @@ function shouldPersistMapping(txn) {
   return txn.txnType === 'credit' && Boolean(txn.mappingKey && txn.apartment);
 }
 
-export async function makeTxnId(txn) {
+export async function makeTxnId(txn, accountKind = ACCOUNT_MAINTENANCE) {
   const amount = txn.creditAmount || txn.debitAmount || 0;
-  return hashTxnId([txn.date, amount, txn.details, txn.chequeNumber || '']);
+  const parts = [txn.date, amount, txn.details, txn.chequeNumber || ''];
+  // Keep maintenance hashes stable; namespace corpus so the same bank line
+  // in both association accounts cannot collide.
+  if (accountKind && accountKind !== ACCOUNT_MAINTENANCE) parts.unshift(accountKind);
+  return hashTxnId(parts);
 }
 
 export function collectExistingTxnIds(data) {
@@ -44,14 +49,21 @@ export function isDeferredCredit(txn) {
  * Build durable pending-credit rows from a classified statement.
  * Skips anything already imported to a ledger (or already queued).
  */
-export async function collectPendingCredits(classified, sourceUpload, fileName, existingIds, existingPendingIds) {
+export async function collectPendingCredits(
+  classified,
+  sourceUpload,
+  fileName,
+  existingIds,
+  existingPendingIds,
+  accountKind = ACCOUNT_MAINTENANCE
+) {
   const pending = [];
   const seen = new Set(existingPendingIds || []);
 
   for (const txn of classified) {
     if (!isDeferredCredit(txn)) continue;
 
-    const txnId = await makeTxnId(txn);
+    const txnId = await makeTxnId(txn, accountKind);
     if (existingIds.has(txnId) || seen.has(txnId)) continue;
     seen.add(txnId);
 
@@ -133,7 +145,12 @@ function rememberApartmentTag(txn, txnId, newMappings, relocations) {
   relocations.push({ txnId, apartment: txn.apartment, mappingKey });
 }
 
-export async function buildLedgerEntries(classified, sourceUpload, existingIds) {
+export async function buildLedgerEntries(
+  classified,
+  sourceUpload,
+  existingIds,
+  accountKind = ACCOUNT_MAINTENANCE
+) {
   const newMappings = {};
   const ledgerUpdates = {};
   const relocations = [];
@@ -145,7 +162,7 @@ export async function buildLedgerEntries(classified, sourceUpload, existingIds) 
   for (const txn of classified) {
     if (txn.skip) continue;
 
-    const txnId = await makeTxnId(txn);
+    const txnId = await makeTxnId(txn, accountKind);
     if (existingIds.has(txnId)) {
       skipped.push(txn);
       // Duplicates are not re-imported, but tags still update mappings + placement
@@ -359,36 +376,51 @@ export function mergeData(existing, updates) {
   return merged;
 }
 
-export function buildCommitFiles(merged, uploadMeta) {
+export function buildCommitFiles(merged, uploadMeta, accountKind = ACCOUNT_MAINTENANCE) {
+  const paths = accountFilePaths(accountKind);
   const files = {
     'data/config.json': merged.config,
     'data/mappings/accounts.json': merged.accounts,
-    'data/expenditures.json': merged.expenditures,
-    'data/interest.json': merged.interest,
-    'data/account-balance.json': merged.accountBalance,
-    'data/pending-credits.json': merged.pendingCredits || [],
+    [paths.expenditures]: merged.expenditures,
+    [paths.interest]: merged.interest,
+    [paths.accountBalance]: merged.accountBalance,
+    [paths.pendingCredits]: merged.pendingCredits || [],
   };
 
   for (const [apt, rows] of Object.entries(merged.ledgers)) {
-    files[`data/ledgers/${apt}.json`] = rows;
+    files[paths.ledger(apt)] = rows;
   }
 
   if (uploadMeta) {
     const uploadKey = uploadMeta.uploadId || uploadMeta.statementMonth;
     if (uploadKey) {
-      files[`data/uploads/${uploadKey}.json`] = uploadMeta;
+      files[paths.upload(uploadKey)] = { ...uploadMeta, accountKind };
     }
   }
 
   return files;
 }
 
-export function canRemoveApartment(apt, ledgers) {
-  const rows = ledgers[apt] || [];
-  return rows.length === 0;
+/** Config + empty ledger files for every apartment in both accounts */
+export function buildApartmentLedgerFiles(data) {
+  const files = {};
+  const apts = data?.config?.apartments || [];
+  for (const kind of ['maintenance', 'corpus']) {
+    const paths = accountFilePaths(kind);
+    const ledgers = data?.[kind]?.ledgers || {};
+    for (const apt of apts) {
+      files[paths.ledger(apt)] = ledgers[apt] || [];
+    }
+  }
+  return files;
 }
 
-export function addApartment(config, ledgers, aptId) {
+export function canRemoveApartment(apt, ...ledgerMaps) {
+  const maps = ledgerMaps.length ? ledgerMaps : [{}];
+  return maps.every((ledgers) => !(ledgers?.[apt] || []).length);
+}
+
+export function addApartment(config, ledgers, aptId, extraLedgerMaps = []) {
   const id = aptId.trim().toUpperCase();
   if (!id) throw new Error('Apartment ID required');
   if (config.apartments.includes(id)) throw new Error(`${id} already exists`);
@@ -399,20 +431,27 @@ export function addApartment(config, ledgers, aptId) {
     if (af !== bf) return af - bf;
     return a.slice(1).localeCompare(b.slice(1));
   });
-  ledgers[id] = [];
+  for (const map of [ledgers, ...extraLedgerMaps]) {
+    if (map) map[id] = [];
+  }
   if (!config.apartmentRates) config.apartmentRates = {};
   if (!config.apartmentRates[id]) {
-    config.apartmentRates[id] = { sqFt: 0, ratePerSqFt: 2.5 };
+    config.apartmentRates[id] = { sqFt: 0, ratePerSqFt: 2.5, corpusDue: 0 };
+  } else if (config.apartmentRates[id].corpusDue == null) {
+    config.apartmentRates[id].corpusDue = 0;
   }
   return id;
 }
 
-export function removeApartment(config, ledgers, aptId) {
-  if (!canRemoveApartment(aptId, ledgers)) {
+export function removeApartment(config, ledgers, aptId, extraLedgerMaps = []) {
+  if (!canRemoveApartment(aptId, ledgers, ...extraLedgerMaps)) {
     throw new Error(`${aptId} has transactions and cannot be removed`);
   }
   config.apartments = config.apartments.filter((a) => a !== aptId);
   delete ledgers[aptId];
+  for (const map of extraLedgerMaps) {
+    if (map) delete map[aptId];
+  }
   if (config.apartmentRates) delete config.apartmentRates[aptId];
 }
 
@@ -475,12 +514,34 @@ export function computeApartmentDues(aptId, data) {
   };
 }
 
+/**
+ * One-time corpus snapshot for one apartment.
+ * expected = configured corpusDue (not monthly maintenance).
+ */
+export function computeCorpusDues(aptId, data) {
+  const rates = data?.config?.apartmentRates?.[aptId] || {};
+  const sqFt = Number(rates.sqFt) || 0;
+  const expected = Number(rates.corpusDue) || 0;
+  const rows = data?.ledgers?.[aptId] || [];
+  const collected = rows.reduce((s, r) => s + (Number(r.creditAmount) || 0), 0);
+  const deficit = expected - collected;
+  return {
+    aptId,
+    sqFt,
+    expected,
+    collected,
+    deficit,
+  };
+}
+
 export function ensureApartmentRates(config) {
   if (!config.apartmentRates) config.apartmentRates = {};
   if (!config.billingStartMonth) config.billingStartMonth = '2026-03';
   for (const apt of config.apartments || []) {
     if (!config.apartmentRates[apt]) {
-      config.apartmentRates[apt] = { sqFt: 0, ratePerSqFt: 2.5 };
+      config.apartmentRates[apt] = { sqFt: 0, ratePerSqFt: 2.5, corpusDue: 0 };
+    } else if (config.apartmentRates[apt].corpusDue == null) {
+      config.apartmentRates[apt].corpusDue = 0;
     }
   }
 }

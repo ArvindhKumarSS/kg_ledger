@@ -6,6 +6,7 @@ import {
   buildLedgerEntries,
   mergeData,
   buildCommitFiles,
+  buildApartmentLedgerFiles,
   addApartment,
   removeApartment,
   canRemoveApartment,
@@ -19,8 +20,19 @@ import {
   collectAllTransactions,
   applyTagCorrections,
   computeApartmentDues,
+  computeCorpusDues,
   ensureApartmentRates,
 } from './ledger-store.js';
+import {
+  ACCOUNT_CORPUS,
+  ACCOUNT_MAINTENANCE,
+  accountFilePaths,
+  accountTitle,
+  accountCreditLabel,
+  detectAccountKind,
+  ensureBankAccounts,
+  expenseCategoriesFor,
+} from './account.js';
 import { formatAmount, formatDisplayDate, escapeHtml, getCookie, setCookie } from './utils.js';
 
 const COOKIE_OWNER = 'kg_gh_owner';
@@ -34,15 +46,149 @@ pdfjsLib.GlobalWorkerOptions.workerSrc =
 
 const state = {
   data: null,
+  accountKind: ACCOUNT_MAINTENANCE,
   classified: [],
   parseWarnings: [],
   fileName: '',
+  parsedAccountNumber: null,
   /** Unsaved Transactions-tab edits: txnId → { apartment?, category?, origin, type, mappingKey, details } */
   txnEdits: new Map(),
 };
 
 function $(sel) {
   return document.querySelector(sel);
+}
+
+function activeSlice() {
+  return state.data?.[state.accountKind];
+}
+
+/** ledger-store view: shared config/mappings + the selected account's files */
+function activeView() {
+  const slice = activeSlice();
+  if (!state.data || !slice) return null;
+  return {
+    config: state.data.config,
+    accounts: state.data.accounts,
+    source: state.data.source,
+    ledgers: slice.ledgers,
+    expenditures: slice.expenditures,
+    interest: slice.interest,
+    pendingCredits: slice.pendingCredits,
+    accountBalance: slice.accountBalance,
+  };
+}
+
+function writeView(merged, { source } = {}) {
+  state.data.config = merged.config;
+  state.data.accounts = merged.accounts;
+  const slice = {
+    ledgers: merged.ledgers,
+    expenditures: merged.expenditures,
+    interest: merged.interest,
+    pendingCredits: merged.pendingCredits || [],
+    accountBalance: merged.accountBalance,
+  };
+  state.data[state.accountKind] = slice;
+  if (state.accountKind === ACCOUNT_MAINTENANCE) state.data.maintenance = slice;
+  if (state.accountKind === ACCOUNT_CORPUS) state.data.corpus = slice;
+  if (source) state.data.source = source;
+}
+
+function prepareAccountSlice(slice, accounts, apartments) {
+  if (!slice) return slice;
+  if (!Array.isArray(slice.pendingCredits)) slice.pendingCredits = [];
+  slice.pendingCredits = suggestPendingApartments(slice.pendingCredits, accounts, apartments);
+  return slice;
+}
+
+function syncAccountChrome() {
+  const kind = state.accountKind;
+  const title = accountTitle(kind);
+  const creditLbl = accountCreditLabel(kind);
+  document.querySelectorAll('.account-card').forEach((card) => {
+    const on = card.dataset.account === kind;
+    card.classList.toggle('active', on);
+    card.setAttribute('aria-pressed', on ? 'true' : 'false');
+  });
+  const uploadSel = $('#upload-account');
+  if (uploadSel && uploadSel.value !== kind) uploadSel.value = kind;
+
+  const name = state.data?.config?.complexName || 'KG Srivatsa Garden';
+  const heading = document.getElementById('complex-name');
+  if (heading) heading.textContent = `${name} — ${title} Ledger`;
+
+  const uploadNote = $('#upload-account-note');
+  if (uploadNote) {
+    uploadNote.innerHTML =
+      kind === ACCOUNT_CORPUS
+        ? `Importing into the <strong>corpus</strong> account (one-time capital contributions such as a new lift — not monthly maintenance).`
+        : `Importing into the <strong>maintenance</strong> account. Switch account with the header cards, or pick below.`;
+  }
+  const dropLabel = $('#drop-zone-label');
+  if (dropLabel) {
+    dropLabel.textContent = `Drop IOB ${title.toLowerCase()} statement PDF here or click to browse`;
+  }
+  const creditsTitle = $('#credits-section-title');
+  if (creditsTitle) creditsTitle.textContent = `Credits — ${creditLbl}`;
+  const pendingHeading = $('#pending-heading');
+  if (pendingHeading) pendingHeading.textContent = `Pending ${kind === ACCOUNT_CORPUS ? 'corpus ' : ''}credits`;
+  const pendingIntro = $('#pending-intro');
+  if (pendingIntro) {
+    pendingIntro.textContent =
+      kind === ACCOUNT_CORPUS
+        ? 'Untagged or skipped corpus credits stay here until you assign an apartment and commit.'
+        : 'Untagged or skipped credits from previous uploads stay here until you assign an apartment and commit.';
+  }
+  const browseHeading = $('#browse-heading');
+  if (browseHeading) browseHeading.textContent = `Browse ${title} Ledgers`;
+  const browseNote = $('#browse-account-note');
+  if (browseNote) {
+    browseNote.textContent =
+      kind === ACCOUNT_CORPUS
+        ? 'Viewing the corpus account — one-time capital contributions, not monthly maintenance dues.'
+        : 'Viewing the maintenance account. Switch to Corpus in the header for lift and other one-time collections.';
+  }
+  const txnHeading = $('#txn-heading');
+  if (txnHeading) txnHeading.textContent = `All ${title.toLowerCase()} transactions`;
+}
+
+function setAccountKind(kind, { confirmIfDirty = true } = {}) {
+  if (kind !== ACCOUNT_MAINTENANCE && kind !== ACCOUNT_CORPUS) return;
+  if (kind === state.accountKind) {
+    syncAccountChrome();
+    return;
+  }
+  if (confirmIfDirty && state.classified.length) {
+    if (!confirm(`Switch to ${accountTitle(kind)} and discard the statement currently in review?`)) {
+      const uploadSel = $('#upload-account');
+      if (uploadSel) uploadSel.value = state.accountKind;
+      return;
+    }
+    state.classified = [];
+    state.parseWarnings = [];
+    state.fileName = '';
+    state.parsedAccountNumber = null;
+    $('#review-section')?.classList.add('hidden');
+    const parseStatus = $('#parse-status');
+    if (parseStatus) parseStatus.innerHTML = '';
+  }
+  if (state.txnEdits.size && confirmIfDirty) {
+    if (!confirm(`Switch to ${accountTitle(kind)} and discard unsaved tag corrections?`)) {
+      const uploadSel = $('#upload-account');
+      if (uploadSel) uploadSel.value = state.accountKind;
+      return;
+    }
+    state.txnEdits = new Map();
+  }
+  state.accountKind = kind;
+  syncAccountChrome();
+  renderPendingCredits();
+  if ($('#panel-transactions')?.classList.contains('active')) {
+    populateTxnFilterOptions();
+    renderTransactions();
+  }
+  if ($('#panel-browse')?.classList.contains('active')) renderBrowse();
 }
 
 function loadSettings() {
@@ -111,15 +257,12 @@ async function fetchLatestData({ requireApi = false } = {}) {
 function applyLoadedData(data, { keepTxnEdits = false } = {}) {
   state.data = data;
   if (!keepTxnEdits) state.txnEdits = new Map();
-  if (!Array.isArray(state.data.pendingCredits)) state.data.pendingCredits = [];
   ensureApartmentRates(state.data.config);
-  state.data.pendingCredits = suggestPendingApartments(
-    state.data.pendingCredits,
-    state.data.accounts,
-    state.data.config.apartments
-  );
-  document.getElementById('complex-name').textContent =
-    `${state.data.config.complexName} — Maintenance Ledger`;
+  ensureBankAccounts(state.data.config);
+  const apts = state.data.config.apartments || [];
+  prepareAccountSlice(state.data.maintenance, state.data.accounts, apts);
+  prepareAccountSlice(state.data.corpus, state.data.accounts, apts);
+  syncAccountChrome();
   renderAccountBalance();
   renderPendingCredits();
   renderSettingsTags();
@@ -141,25 +284,27 @@ async function refreshBeforeWrite() {
   await reloadData({ requireApi: true });
 }
 
-function renderAccountBalance() {
-  const bal = state.data?.accountBalance;
-  const amountEl = $('#balance-amount');
-  const footprintEl = $('#balance-footprint');
-
+function renderOneBalance(kind, amountEl, footprintEl) {
+  const bal = state.data?.[kind]?.accountBalance;
+  if (!amountEl || !footprintEl) return;
   if (bal?.balance == null) {
     amountEl.textContent = '—';
     footprintEl.textContent = 'No statement uploaded yet';
     return;
   }
-
   amountEl.textContent = `₹ ${formatAmount(bal.balance)} Cr`;
   const asOf = bal.lastTransactionDate ? `As of ${formatDisplayDate(bal.lastTransactionDate)}` : '';
   const src = state.data?.source === 'github-api' ? ' · live from GitHub' : '';
   footprintEl.textContent = `${asOf}${src}`.trim();
 }
 
+function renderAccountBalance() {
+  renderOneBalance(ACCOUNT_MAINTENANCE, $('#maint-balance-amount'), $('#maint-balance-footprint'));
+  renderOneBalance(ACCOUNT_CORPUS, $('#corpus-balance-amount'), $('#corpus-balance-footprint'));
+}
+
 function pendingRows() {
-  return state.data?.pendingCredits || [];
+  return activeSlice()?.pendingCredits || [];
 }
 
 function renderPendingCredits() {
@@ -206,9 +351,9 @@ function renderPendingCredits() {
     sel.addEventListener('change', (e) => {
       const idx = +e.target.dataset.idx;
       const apt = e.target.value || null;
-      state.data.pendingCredits[idx].apartment = apt;
-      state.data.pendingCredits[idx].needsReview = !apt;
-      state.data.pendingCredits[idx].skipped = !apt;
+      state.data[state.accountKind].pendingCredits[idx].apartment = apt;
+      state.data[state.accountKind].pendingCredits[idx].needsReview = !apt;
+      state.data[state.accountKind].pendingCredits[idx].skipped = !apt;
       renderPendingCredits();
     });
   });
@@ -223,7 +368,7 @@ function aptOptions(selected = '', { allowEmpty = true } = {}) {
 }
 
 function catOptions(selected = '') {
-  const cats = ['', ...(state.data?.config?.expenseCategories || [])];
+  const cats = ['', ...expenseCategoriesFor(state.accountKind, state.data?.config)];
   return cats
     .map((c) => `<option value="${escapeHtml(c)}"${c === selected ? ' selected' : ''}>${c || '—'}</option>`)
     .join('');
@@ -264,7 +409,7 @@ function isTxnDirty(row) {
 
 function updateTxnSaveButton() {
   const dirtyCount = [...state.txnEdits.keys()].filter((id) => {
-    const base = collectAllTransactions(state.data || {}).find((r) => r.txnId === id);
+    const base = collectAllTransactions(activeView() || {}).find((r) => r.txnId === id);
     return base && isTxnDirty(base);
   }).length;
   const btn = $('#save-txn-tags-btn');
@@ -302,8 +447,9 @@ function setTxnEdit(row, patch) {
 
 function apartmentFilterList() {
   const fromConfig = state.data?.config?.apartments || [];
-  const fromLedgers = Object.keys(state.data?.ledgers || {});
-  const fromPending = (state.data?.pendingCredits || [])
+  const slice = activeSlice() || {};
+  const fromLedgers = Object.keys(slice.ledgers || {});
+  const fromPending = (slice.pendingCredits || [])
     .map((r) => r.apartment)
     .filter(Boolean);
   const set = new Set([...fromConfig, ...fromLedgers, ...fromPending]);
@@ -323,9 +469,9 @@ function populateTxnFilterOptions() {
   const prevApt = aptSel.value || 'all';
   const prevCat = catSel.value || 'all';
   const apts = apartmentFilterList();
-  const cats = [...(state.data?.config?.expenseCategories || [])];
+  const cats = [...expenseCategoriesFor(state.accountKind, state.data?.config)];
   // Include any categories already used on expenditures
-  for (const row of state.data?.expenditures || []) {
+  for (const row of activeSlice()?.expenditures || []) {
     if (row.category && !cats.includes(row.category)) cats.push(row.category);
   }
   cats.sort((a, b) => a.localeCompare(b));
@@ -421,7 +567,7 @@ function renderTransactions() {
 
   populateTxnFilterOptions();
 
-  const rows = collectAllTransactions(state.data || {});
+  const rows = collectAllTransactions(activeView() || {});
   const filters = getTxnFilters();
   const filtered = rows.filter((r) => matchesTxnFilters(r, filters));
 
@@ -519,7 +665,7 @@ function renderTransactions() {
 async function handleSaveTxnTags() {
   if (!ensureGitHubSettings()) return;
 
-  const baseRows = collectAllTransactions(state.data || {});
+  const baseRows = collectAllTransactions(activeView() || {});
   const byId = new Map(baseRows.map((r) => [r.txnId, r]));
   const corrections = [];
   for (const [txnId, edit] of state.txnEdits) {
@@ -563,7 +709,7 @@ async function handleSaveTxnTags() {
     await refreshBeforeWrite();
 
     // Re-resolve corrections against fresh git data
-    const freshRows = collectAllTransactions(state.data || {});
+    const freshRows = collectAllTransactions(activeView() || {});
     const freshById = new Map(freshRows.map((r) => [r.txnId, r]));
     const freshCorrections = [];
     for (const edit of corrections) {
@@ -608,16 +754,16 @@ async function handleSaveTxnTags() {
       return;
     }
 
-    const merged = applyTagCorrections(state.data, freshCorrections);
-    const files = buildCommitFiles({ ...merged, source: undefined }, null);
+    const merged = applyTagCorrections(activeView(), freshCorrections);
+    const files = buildCommitFiles({ ...merged, source: undefined }, null, state.accountKind);
     const client = ghClient();
     const sha = await client.commitFiles(
-      `Correct tags on ${freshCorrections.length} transaction(s)`,
+      `Correct ${accountTitle(state.accountKind).toLowerCase()} tags on ${freshCorrections.length} transaction(s)`,
       files
     );
 
-    state.txnEdits = new Map();
-    applyLoadedData({ ...merged, source: 'github-api' }, { keepTxnEdits: false });
+    writeView(merged, { source: 'github-api' });
+    applyLoadedData(state.data, { keepTxnEdits: false });
     renderTransactions();
     status.textContent = `Saved (${sha.slice(0, 7)})`;
     alert(`Saved ${freshCorrections.length} tag correction(s).`);
@@ -721,8 +867,15 @@ async function handlePdf(file) {
   state.fileName = file.name;
 
   try {
-    const { transactions, parseWarnings } = await parsePdfFile(file, pdfjsLib);
+    const { transactions, parseWarnings, accountNumber } = await parsePdfFile(file, pdfjsLib);
     state.parseWarnings = parseWarnings;
+    state.parsedAccountNumber = accountNumber || null;
+
+    const detected = detectAccountKind(accountNumber, state.data.config);
+    if (detected && detected !== state.accountKind) {
+      setAccountKind(detected, { confirmIfDirty: false });
+    }
+
     state.classified = classifyAll(
       transactions,
       state.data.accounts,
@@ -736,7 +889,10 @@ async function handlePdf(file) {
       $('#warnings-box').classList.add('hidden');
     }
 
-    $('#parse-status').innerHTML = `<div class="alert alert-success">Parsed ${transactions.length} transactions from ${escapeHtml(file.name)}</div>`;
+    const acNote = accountNumber
+      ? ` · A/C ${escapeHtml(accountNumber)} → ${accountTitle(state.accountKind).toLowerCase()}`
+      : ` · ${accountTitle(state.accountKind).toLowerCase()} account`;
+    $('#parse-status').innerHTML = `<div class="alert alert-success">Parsed ${transactions.length} transactions from ${escapeHtml(file.name)}${acNote}</div>`;
     $('#review-section').classList.remove('hidden');
     renderSummary(state.classified);
     renderReviewTables(state.classified);
@@ -769,7 +925,7 @@ async function handleCommit() {
   if (deferred.length) {
     if (
       !confirm(
-        `${deferred.length} credit(s) are untagged or skipped and will be saved to Pending for later tagging. Continue?`
+        `${deferred.length} credit(s) are untagged or skipped and will be saved to ${accountTitle(state.accountKind)} Pending for later tagging. Continue?`
       )
     ) {
       return;
@@ -781,11 +937,12 @@ async function handleCommit() {
 
   try {
     // Always merge against live git — never against a stale Pages-cached snapshot
-    const uiPending = [...(state.data.pendingCredits || [])];
+    const uiPending = [...(activeSlice()?.pendingCredits || [])];
     await refreshBeforeWrite();
     if (uiPending.length) {
       const uiById = new Map(uiPending.map((r) => [r.txnId, r]));
-      state.data.pendingCredits = (state.data.pendingCredits || []).map((row) => {
+      const slice = activeSlice();
+      slice.pendingCredits = (slice.pendingCredits || []).map((row) => {
         const ui = uiById.get(row.txnId);
         if (!ui?.apartment) return row;
         return {
@@ -797,18 +954,25 @@ async function handleCommit() {
       });
     }
 
-    const existingIds = collectExistingTxnIds(state.data);
-    const updates = await buildLedgerEntries(state.classified, sourceUpload, existingIds);
+    const view = activeView();
+    const existingIds = collectExistingTxnIds(view);
+    const updates = await buildLedgerEntries(
+      state.classified,
+      sourceUpload,
+      existingIds,
+      state.accountKind
+    );
 
-    const existingPendingIds = new Set((state.data.pendingCredits || []).map((r) => r.txnId));
+    const existingPendingIds = new Set((view.pendingCredits || []).map((r) => r.txnId));
     const newPending = await collectPendingCredits(
       state.classified,
       sourceUpload,
       state.fileName,
       existingIds,
-      existingPendingIds
+      existingPendingIds,
+      state.accountKind
     );
-    let pendingCredits = mergePendingCredits(state.data.pendingCredits || [], newPending);
+    let pendingCredits = mergePendingCredits(view.pendingCredits || [], newPending);
     // Drop anything imported or relocated in this commit
     pendingCredits = removePendingCredits(pendingCredits, [
       ...updates.importedTxnIds,
@@ -816,11 +980,11 @@ async function handleCommit() {
     ]);
     updates.pendingCredits = pendingCredits;
 
-    const merged = mergeData(state.data, updates);
+    const merged = mergeData(view, updates);
 
     const snapshot = extractStatementSnapshot(state.classified);
     merged.accountBalance = updateAccountBalance(
-      state.data.accountBalance,
+      view.accountBalance,
       snapshot,
       month || sourceUpload
     );
@@ -830,6 +994,8 @@ async function handleCommit() {
       uploadId,
       statementMonth: month || null,
       fileName: state.fileName,
+      accountKind: state.accountKind,
+      accountNumber: state.parsedAccountNumber,
       transactionCount: updates.importedTxnIds.length,
       importedTxnIds: updates.importedTxnIds,
       skippedDuplicates: updates.skipped.length,
@@ -837,15 +1003,13 @@ async function handleCommit() {
       pendingCreditsTotal: pendingCredits.length,
     };
 
-    const files = buildCommitFiles(merged, uploadMeta);
+    const files = buildCommitFiles(merged, uploadMeta, state.accountKind);
     const client = ghClient();
-    const label = month || state.fileName || uploadId;
-    const sha = await client.commitFiles(`Import statement ${label}`, files);
+    const label = `${accountTitle(state.accountKind)} ${month || state.fileName || uploadId}`;
+    const sha = await client.commitFiles(`Import ${label} statement`, files);
 
-    state.data = { ...merged, source: 'github-api' };
-    renderAccountBalance();
-    renderPendingCredits();
-    renderTransactions();
+    writeView(merged, { source: 'github-api' });
+    applyLoadedData(state.data, { keepTxnEdits: true });
     $('#commit-status').textContent = `Committed (${sha.slice(0, 7)})`;
     const dupNote = updates.skipped.length
       ? ` ${updates.skipped.length} duplicate(s) ignored.`
@@ -868,7 +1032,7 @@ async function handleCommitPending() {
   if (!ensureGitHubSettings()) return;
 
   // Capture UI tags first — refresh replaces pending rows from git
-  const uiPending = [...(state.data.pendingCredits || [])];
+  const uiPending = [...(activeSlice()?.pendingCredits || [])];
   const readyFromUi = pendingReadyToImport(uiPending);
   if (!readyFromUi.length) {
     alert('Tag at least one pending credit with an apartment before committing.');
@@ -886,7 +1050,8 @@ async function handleCommitPending() {
 
     // Re-apply apartment choices from the UI onto the fresh git pending list
     const uiById = new Map(uiPending.map((r) => [r.txnId, r]));
-    state.data.pendingCredits = (state.data.pendingCredits || []).map((row) => {
+    const slice = activeSlice();
+    slice.pendingCredits = (slice.pendingCredits || []).map((row) => {
       const ui = uiById.get(row.txnId);
       if (!ui) return row;
       return {
@@ -897,13 +1062,14 @@ async function handleCommitPending() {
       };
     });
 
-    const ready = pendingReadyToImport(state.data.pendingCredits || []);
+    const ready = pendingReadyToImport(slice.pendingCredits || []);
     if (!ready.length) {
       alert('No tagged pending credits found after refresh. Tag again and retry.');
       return;
     }
 
-    const existingIds = collectExistingTxnIds(state.data);
+    const view = activeView();
+    const existingIds = collectExistingTxnIds(view);
     // Reuse ledger import path; sourceUpload kept from original statement
     const classified = ready.map((row) => ({
       ...row,
@@ -920,12 +1086,12 @@ async function handleCommitPending() {
       bySource.get(key).push(txn);
     }
 
-    let working = { ...state.data, pendingCredits: [...(state.data.pendingCredits || [])] };
+    let working = { ...view, pendingCredits: [...(view.pendingCredits || [])] };
     let importedTotal = 0;
     let dupTotal = 0;
 
     for (const [sourceUpload, txns] of bySource) {
-      const updates = await buildLedgerEntries(txns, sourceUpload, existingIds);
+      const updates = await buildLedgerEntries(txns, sourceUpload, existingIds, state.accountKind);
       for (const id of updates.importedTxnIds) existingIds.add(id);
       importedTotal += updates.importedTxnIds.length;
       dupTotal += updates.skipped.length;
@@ -937,17 +1103,15 @@ async function handleCommitPending() {
       working = mergeData(working, updates);
     }
 
-    const files = buildCommitFiles(working, null);
+    const files = buildCommitFiles(working, null, state.accountKind);
     const client = ghClient();
     const sha = await client.commitFiles(
-      `Import ${importedTotal} pending credit(s)`,
+      `Import ${importedTotal} pending ${accountTitle(state.accountKind).toLowerCase()} credit(s)`,
       files
     );
 
-    state.data = { ...working, source: 'github-api' };
-    renderAccountBalance();
-    renderPendingCredits();
-    renderTransactions();
+    writeView(working, { source: 'github-api' });
+    applyLoadedData(state.data, { keepTxnEdits: true });
     $('#pending-commit-status').textContent = `Committed (${sha.slice(0, 7)})`;
     const dupNote = dupTotal ? ` ${dupTotal} already in ledgers (tags updated).` : '';
     alert(`Imported ${importedTotal} pending credit(s).${dupNote}`);
@@ -969,7 +1133,7 @@ async function handleDismissPending() {
     return;
   }
 
-  const ids = checks.map((cb) => state.data.pendingCredits[+cb.dataset.idx]?.txnId).filter(Boolean);
+  const ids = checks.map((cb) => (activeSlice()?.pendingCredits || [])[+cb.dataset.idx]?.txnId).filter(Boolean);
   if (!confirm(`Permanently remove ${ids.length} pending credit(s) without importing?`)) return;
 
   $('#commit-pending-btn').disabled = true;
@@ -978,16 +1142,17 @@ async function handleDismissPending() {
 
   try {
     await refreshBeforeWrite();
-    const pendingCredits = removePendingCredits(state.data.pendingCredits || [], ids);
-    const merged = { ...state.data, pendingCredits, source: 'github-api' };
+    const pendingCredits = removePendingCredits(activeSlice()?.pendingCredits || [], ids);
+    activeSlice().pendingCredits = pendingCredits;
     const files = {
-      'data/pending-credits.json': pendingCredits,
+      [accountFilePaths(state.accountKind).pendingCredits]: pendingCredits,
     };
     const client = ghClient();
-    const sha = await client.commitFiles(`Dismiss ${ids.length} pending credit(s)`, files);
-    state.data = merged;
-    renderPendingCredits();
-    renderTransactions();
+    const sha = await client.commitFiles(
+      `Dismiss ${ids.length} pending ${accountTitle(state.accountKind).toLowerCase()} credit(s)`,
+      files
+    );
+    applyLoadedData(state.data, { keepTxnEdits: true });
     $('#pending-commit-status').textContent = `Saved (${sha.slice(0, 7)})`;
   } catch (err) {
     $('#pending-commit-status').textContent = '';
@@ -1004,7 +1169,36 @@ function renderAptDues(apt) {
   const note = $('#apt-dues-note');
   if (!panel || !grid || !note) return;
 
-  const dues = computeApartmentDues(apt, state.data);
+  const view = activeView();
+  if (state.accountKind === ACCOUNT_CORPUS) {
+    const dues = computeCorpusDues(apt, view);
+    const deficitClass =
+      dues.expected && dues.deficit > 0.009
+        ? 'deficit'
+        : dues.expected && dues.deficit < -0.009
+          ? 'surplus'
+          : '';
+    const deficitLabel = !dues.expected
+      ? 'Collected'
+      : dues.deficit > 0.009
+        ? 'Deficit'
+        : dues.deficit < -0.009
+          ? 'Surplus'
+          : 'Balanced';
+    panel.classList.remove('hidden');
+    grid.innerHTML = `
+      <div class="summary-card"><div class="num">${dues.sqFt ? dues.sqFt.toLocaleString('en-IN') : '—'}</div><div class="lbl">Sq.Ft</div></div>
+      <div class="summary-card"><div class="num">${dues.expected ? `₹ ${formatAmount(dues.expected)}` : '—'}</div><div class="lbl">Corpus due</div></div>
+      <div class="summary-card"><div class="num">₹ ${formatAmount(dues.collected)}</div><div class="lbl">Collected</div></div>
+      <div class="summary-card ${deficitClass}"><div class="num">₹ ${formatAmount(dues.expected ? Math.abs(dues.deficit) : dues.collected)}</div><div class="lbl">${deficitLabel}</div></div>
+    `;
+    note.textContent = dues.expected
+      ? 'Corpus due is a one-time contribution (not monthly). Set the amount in Settings.'
+      : 'Set a one-time corpus due for this apartment in Settings to see expected vs collected.';
+    return;
+  }
+
+  const dues = computeApartmentDues(apt, view);
   if (!dues.sqFt || !dues.ratePerSqFt) {
     panel.classList.remove('hidden');
     grid.innerHTML = `
@@ -1051,7 +1245,7 @@ function renderBrowse() {
 
   if (view === 'apartment') {
     const apt = $('#browse-apartment').value;
-    const rows = state.data?.ledgers?.[apt] || [];
+    const rows = activeSlice()?.ledgers?.[apt] || [];
     renderAptDues(apt);
     thead.innerHTML = '<tr><th>Date</th><th>Credit amount</th><th>Transaction details</th></tr>';
     tbody.innerHTML =
@@ -1066,18 +1260,29 @@ function renderBrowse() {
         </tr>`
             )
             .join('');
-    const total = rows.reduce((s, r) => s + r.creditAmount, 0);
-    const dues = computeApartmentDues(apt, state.data);
-    $('#browse-summary').textContent =
-      `${apt}: ${rows.length} payments, collected ₹${formatAmount(total)}` +
-      (dues.sqFt
-        ? ` · expected ₹${formatAmount(dues.expected)} · ${
-            dues.deficit >= 0 ? 'deficit' : 'surplus'
-          } ₹${formatAmount(Math.abs(dues.deficit))}`
-        : '');
+    const total = rows.reduce((s, r) => s + (r.creditAmount || 0), 0);
+    if (state.accountKind === ACCOUNT_CORPUS) {
+      const dues = computeCorpusDues(apt, activeView());
+      $('#browse-summary').textContent =
+        `${apt} corpus: ${rows.length} payment(s), collected ₹${formatAmount(total)}` +
+        (dues.expected
+          ? ` · due ₹${formatAmount(dues.expected)} · ${
+              dues.deficit >= 0 ? 'deficit' : 'surplus'
+            } ₹${formatAmount(Math.abs(dues.deficit))}`
+          : '');
+    } else {
+      const dues = computeApartmentDues(apt, activeView());
+      $('#browse-summary').textContent =
+        `${apt}: ${rows.length} payments, collected ₹${formatAmount(total)}` +
+        (dues.sqFt
+          ? ` · expected ₹${formatAmount(dues.expected)} · ${
+              dues.deficit >= 0 ? 'deficit' : 'surplus'
+            } ₹${formatAmount(Math.abs(dues.deficit))}`
+          : '');
+    }
   } else if (view === 'expenditures') {
     duesPanel?.classList.add('hidden');
-    const rows = state.data?.expenditures || [];
+    const rows = activeSlice()?.expenditures || [];
     thead.innerHTML = '<tr><th>Date</th><th>Debit amount</th><th>Details</th><th>Category</th></tr>';
     tbody.innerHTML =
       rows.length === 0
@@ -1096,7 +1301,7 @@ function renderBrowse() {
     $('#browse-summary').textContent = `${rows.length} expenditures, total ₹${formatAmount(total)}`;
   } else {
     duesPanel?.classList.add('hidden');
-    const rows = state.data?.interest || [];
+    const rows = activeSlice()?.interest || [];
     thead.innerHTML = '<tr><th>Date</th><th>Amount</th><th>Details</th></tr>';
     tbody.innerHTML =
       rows.length === 0
@@ -1120,18 +1325,24 @@ function renderApartmentRatesEditor() {
   if (!tbody) return;
 
   ensureApartmentRates(state.data.config);
+  ensureBankAccounts(state.data.config);
   if (startInput) startInput.value = state.data.config.billingStartMonth || '';
+  const maintAc = $('#maint-account-number');
+  const corpusAc = $('#corpus-account-number');
+  if (maintAc) maintAc.value = state.data.config.bankAccounts.maintenance.accountNumber || '';
+  if (corpusAc) corpusAc.value = state.data.config.bankAccounts.corpus.accountNumber || '';
 
   const apts = state.data.config.apartments || [];
   tbody.innerHTML = apts
     .map((apt) => {
-      const rate = state.data.config.apartmentRates[apt] || { sqFt: 0, ratePerSqFt: 2.5 };
+      const rate = state.data.config.apartmentRates[apt] || { sqFt: 0, ratePerSqFt: 2.5, corpusDue: 0 };
       const monthly = (Number(rate.sqFt) || 0) * (Number(rate.ratePerSqFt) || 0);
       return `<tr data-apt="${escapeHtml(apt)}">
         <td>${escapeHtml(apt)}</td>
         <td><input type="number" min="0" step="1" class="rate-sqft" data-apt="${escapeHtml(apt)}" value="${Number(rate.sqFt) || 0}"></td>
         <td><input type="number" min="0" step="0.01" class="rate-per-sqft" data-apt="${escapeHtml(apt)}" value="${Number(rate.ratePerSqFt) || 0}"></td>
         <td class="amount rate-monthly">${formatAmount(monthly)}</td>
+        <td><input type="number" min="0" step="0.01" class="rate-corpus-due" data-apt="${escapeHtml(apt)}" value="${Number(rate.corpusDue) || 0}"></td>
       </tr>`;
     })
     .join('');
@@ -1149,7 +1360,7 @@ function renderApartmentRatesEditor() {
     input.addEventListener('change', (e) => {
       const apt = e.target.dataset.apt;
       if (!state.data.config.apartmentRates[apt]) {
-        state.data.config.apartmentRates[apt] = { sqFt: 0, ratePerSqFt: 2.5 };
+        state.data.config.apartmentRates[apt] = { sqFt: 0, ratePerSqFt: 2.5, corpusDue: 0 };
       }
       state.data.config.apartmentRates[apt].sqFt = Number(e.target.value) || 0;
       syncMonthly(apt);
@@ -1160,10 +1371,20 @@ function renderApartmentRatesEditor() {
     input.addEventListener('change', (e) => {
       const apt = e.target.dataset.apt;
       if (!state.data.config.apartmentRates[apt]) {
-        state.data.config.apartmentRates[apt] = { sqFt: 0, ratePerSqFt: 2.5 };
+        state.data.config.apartmentRates[apt] = { sqFt: 0, ratePerSqFt: 2.5, corpusDue: 0 };
       }
       state.data.config.apartmentRates[apt].ratePerSqFt = Number(e.target.value) || 0;
       syncMonthly(apt);
+    });
+  });
+
+  tbody.querySelectorAll('.rate-corpus-due').forEach((input) => {
+    input.addEventListener('change', (e) => {
+      const apt = e.target.dataset.apt;
+      if (!state.data.config.apartmentRates[apt]) {
+        state.data.config.apartmentRates[apt] = { sqFt: 0, ratePerSqFt: 2.5, corpusDue: 0 };
+      }
+      state.data.config.apartmentRates[apt].corpusDue = Number(e.target.value) || 0;
     });
   });
 }
@@ -1172,7 +1393,11 @@ function renderSettingsTags() {
   const apts = state.data?.config?.apartments || [];
   $('#apt-tags').innerHTML = apts
     .map((a) => {
-      const canDel = canRemoveApartment(a, state.data.ledgers);
+      const canDel = canRemoveApartment(
+        a,
+        state.data.maintenance?.ledgers,
+        state.data.corpus?.ledgers
+      );
       return `<span class="tag">${a}${canDel ? `<button data-rm-apt="${a}" title="Remove">×</button>` : ''}</span>`;
     })
     .join('');
@@ -1180,7 +1405,12 @@ function renderSettingsTags() {
   document.querySelectorAll('[data-rm-apt]').forEach((btn) => {
     btn.addEventListener('click', () => {
       try {
-        removeApartment(state.data.config, state.data.ledgers, btn.dataset.rmApt);
+        removeApartment(
+          state.data.config,
+          state.data.maintenance.ledgers,
+          btn.dataset.rmApt,
+          [state.data.corpus.ledgers]
+        );
         renderSettingsTags();
         renderBrowseApartments();
       } catch (e) {
@@ -1206,6 +1436,26 @@ function renderSettingsTags() {
     });
   });
 
+  ensureBankAccounts(state.data.config);
+  const corpusCats = state.data.config.corpusExpenseCategories || [];
+  const corpusCatEl = $('#corpus-cat-tags');
+  if (corpusCatEl) {
+    corpusCatEl.innerHTML = corpusCats
+      .map(
+        (c) =>
+          `<span class="tag">${escapeHtml(c)}<button data-rm-corpus-cat="${escapeHtml(c)}" title="Remove">×</button></span>`
+      )
+      .join('');
+    document.querySelectorAll('[data-rm-corpus-cat]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        state.data.config.corpusExpenseCategories = state.data.config.corpusExpenseCategories.filter(
+          (c) => c !== btn.dataset.rmCorpusCat
+        );
+        renderSettingsTags();
+      });
+    });
+  }
+
   renderApartmentRatesEditor();
 }
 
@@ -1214,22 +1464,26 @@ async function saveConfigToGitHub() {
 
   $('#settings-status').textContent = 'Saving…';
   try {
+    readBankAccountInputs();
     // Keep local apartment/category edits; refresh other authoritative fields from git
     const localConfig = state.data.config;
-    const localLedgers = state.data.ledgers;
+    const localMaint = { ...(state.data.maintenance?.ledgers || {}) };
+    const localCorpus = { ...(state.data.corpus?.ledgers || {}) };
     await refreshBeforeWrite();
     state.data.config = localConfig;
     // Preserve any newly added empty apartment ledgers
     for (const apt of localConfig.apartments) {
-      if (!state.data.ledgers[apt]) state.data.ledgers[apt] = localLedgers[apt] || [];
+      if (!state.data.maintenance.ledgers[apt]) {
+        state.data.maintenance.ledgers[apt] = localMaint[apt] || [];
+      }
+      if (!state.data.corpus.ledgers[apt]) {
+        state.data.corpus.ledgers[apt] = localCorpus[apt] || [];
+      }
     }
-    const files = buildCommitFiles(state.data, null);
     const client = ghClient();
     await client.commitFiles('Update config', {
-      'data/config.json': files['data/config.json'],
-      ...Object.fromEntries(
-        Object.entries(files).filter(([k]) => k.startsWith('data/ledgers/'))
-      ),
+      'data/config.json': state.data.config,
+      ...buildApartmentLedgerFiles(state.data),
     });
     $('#settings-status').textContent = 'Saved';
     renderSettingsTags();
@@ -1238,6 +1492,15 @@ async function saveConfigToGitHub() {
   } catch (e) {
     $('#settings-status').textContent = `Error: ${e.message}`;
   }
+}
+
+function readBankAccountInputs() {
+  if (!state.data?.config) return;
+  ensureBankAccounts(state.data.config);
+  const maintAc = $('#maint-account-number');
+  const corpusAc = $('#corpus-account-number');
+  if (maintAc) state.data.config.bankAccounts.maintenance.accountNumber = maintAc.value.trim();
+  if (corpusAc) state.data.config.bankAccounts.corpus.accountNumber = corpusAc.value.trim();
 }
 
 function initSettings() {
@@ -1271,7 +1534,12 @@ function initSettings() {
 
   $('#add-apt-btn').addEventListener('click', () => {
     try {
-      addApartment(state.data.config, state.data.ledgers, $('#new-apt').value);
+      addApartment(
+        state.data.config,
+        state.data.maintenance.ledgers,
+        $('#new-apt').value,
+        [state.data.corpus.ledgers]
+      );
       $('#new-apt').value = '';
       renderSettingsTags();
       renderBrowseApartments();
@@ -1284,6 +1552,9 @@ function initSettings() {
     state.data.config.billingStartMonth = e.target.value || null;
   });
 
+  $('#maint-account-number')?.addEventListener('change', readBankAccountInputs);
+  $('#corpus-account-number')?.addEventListener('change', readBankAccountInputs);
+
   $('#add-cat-btn').addEventListener('click', () => {
     const cat = $('#new-cat').value.trim();
     if (!cat) return;
@@ -1291,6 +1562,17 @@ function initSettings() {
       state.data.config.expenseCategories.push(cat);
     }
     $('#new-cat').value = '';
+    renderSettingsTags();
+  });
+
+  $('#add-corpus-cat-btn')?.addEventListener('click', () => {
+    ensureBankAccounts(state.data.config);
+    const cat = $('#new-corpus-cat').value.trim();
+    if (!cat) return;
+    if (!state.data.config.corpusExpenseCategories.includes(cat)) {
+      state.data.config.corpusExpenseCategories.push(cat);
+    }
+    $('#new-corpus-cat').value = '';
     renderSettingsTags();
   });
 
@@ -1318,6 +1600,13 @@ function initUpload() {
   });
   input.addEventListener('change', () => {
     if (input.files[0]) handlePdf(input.files[0]);
+  });
+
+  $('#upload-account')?.addEventListener('change', (e) => {
+    setAccountKind(e.target.value);
+  });
+  document.querySelectorAll('.account-card').forEach((card) => {
+    card.addEventListener('click', () => setAccountKind(card.dataset.account));
   });
 
   $('#commit-btn').addEventListener('click', handleCommit);

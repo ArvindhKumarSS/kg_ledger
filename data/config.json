@@ -48,155 +48,206 @@
     "Bank Charges",
     "Misc"
   ],
+  "corpusExpenseCategories": [
+    "Lift",
+    "Capital works",
+    "Bank Charges",
+    "Misc"
+  ],
+  "bankAccounts": {
+    "maintenance": {
+      "accountNumber": ""
+    },
+    "corpus": {
+      "accountNumber": ""
+    }
+  },
   "billingStartMonth": "2026-03",
   "apartmentRates": {
     "1A": {
       "sqFt": 1610,
-      "ratePerSqFt": 2.5
+      "ratePerSqFt": 2.5,
+      "corpusDue": 0
     },
     "1B": {
       "sqFt": 1160,
-      "ratePerSqFt": 2.5
+      "ratePerSqFt": 2.5,
+      "corpusDue": 0
     },
     "1C": {
       "sqFt": 1200,
-      "ratePerSqFt": 2.5
+      "ratePerSqFt": 2.5,
+      "corpusDue": 0
     },
     "1D": {
       "sqFt": 1200,
-      "ratePerSqFt": 2.5
+      "ratePerSqFt": 2.5,
+      "corpusDue": 0
     },
     "1E": {
       "sqFt": 1410,
-      "ratePerSqFt": 2.5
+      "ratePerSqFt": 2.5,
+      "corpusDue": 0
     },
     "1F": {
       "sqFt": 0,
-      "ratePerSqFt": 2.5
+      "ratePerSqFt": 2.5,
+      "corpusDue": 0
     },
     "1FA": {
       "sqFt": 1695,
-      "ratePerSqFt": 2.5
+      "ratePerSqFt": 2.5,
+      "corpusDue": 0
     },
     "1FB": {
       "sqFt": 1695,
-      "ratePerSqFt": 2.5
+      "ratePerSqFt": 2.5,
+      "corpusDue": 0
     },
     "1G": {
       "sqFt": 3390,
-      "ratePerSqFt": 2.5
+      "ratePerSqFt": 2.5,
+      "corpusDue": 0
     },
     "2A": {
       "sqFt": 1610,
-      "ratePerSqFt": 2.5
+      "ratePerSqFt": 2.5,
+      "corpusDue": 0
     },
     "2B": {
       "sqFt": 1160,
-      "ratePerSqFt": 2.5
+      "ratePerSqFt": 2.5,
+      "corpusDue": 0
     },
     "2C": {
       "sqFt": 1200,
-      "ratePerSqFt": 2.5
+      "ratePerSqFt": 2.5,
+      "corpusDue": 0
     },
     "2D": {
       "sqFt": 1200,
-      "ratePerSqFt": 2.5
+      "ratePerSqFt": 2.5,
+      "corpusDue": 0
     },
     "2E": {
       "sqFt": 1410,
-      "ratePerSqFt": 2.5
+      "ratePerSqFt": 2.5,
+      "corpusDue": 0
     },
     "2F": {
       "sqFt": 0,
-      "ratePerSqFt": 2.5
+      "ratePerSqFt": 2.5,
+      "corpusDue": 0
     },
     "2G": {
       "sqFt": 0,
-      "ratePerSqFt": 2.5
+      "ratePerSqFt": 2.5,
+      "corpusDue": 0
     },
     "3A": {
       "sqFt": 2005,
-      "ratePerSqFt": 2.5
+      "ratePerSqFt": 2.5,
+      "corpusDue": 0
     },
     "3B": {
       "sqFt": 765,
-      "ratePerSqFt": 2.5
+      "ratePerSqFt": 2.5,
+      "corpusDue": 0
     },
     "3C": {
       "sqFt": 1200,
-      "ratePerSqFt": 2.5
+      "ratePerSqFt": 2.5,
+      "corpusDue": 0
     },
     "3D": {
       "sqFt": 1200,
-      "ratePerSqFt": 2.5
+      "ratePerSqFt": 2.5,
+      "corpusDue": 0
     },
     "3E": {
       "sqFt": 1410,
-      "ratePerSqFt": 2.5
+      "ratePerSqFt": 2.5,
+      "corpusDue": 0
     },
     "3F": {
       "sqFt": 1695,
-      "ratePerSqFt": 2.5
+      "ratePerSqFt": 2.5,
+      "corpusDue": 0
     },
     "3G": {
       "sqFt": 1695,
-      "ratePerSqFt": 2.5
+      "ratePerSqFt": 2.5,
+      "corpusDue": 0
     },
     "4A": {
       "sqFt": 1610,
-      "ratePerSqFt": 2.5
+      "ratePerSqFt": 2.5,
+      "corpusDue": 0
     },
     "4B": {
       "sqFt": 1800,
-      "ratePerSqFt": 2.5
+      "ratePerSqFt": 2.5,
+      "corpusDue": 0
     },
     "4C": {
       "sqFt": 0,
-      "ratePerSqFt": 2.5
+      "ratePerSqFt": 2.5,
+      "corpusDue": 0
     },
     "4D": {
       "sqFt": 1760,
-      "ratePerSqFt": 2.5
+      "ratePerSqFt": 2.5,
+      "corpusDue": 0
     },
     "4E": {
       "sqFt": 1410,
-      "ratePerSqFt": 2.5
+      "ratePerSqFt": 2.5,
+      "corpusDue": 0
     },
     "4F": {
       "sqFt": 1695,
-      "ratePerSqFt": 2.5
+      "ratePerSqFt": 2.5,
+      "corpusDue": 0
     },
     "4G": {
       "sqFt": 1695,
-      "ratePerSqFt": 2.5
+      "ratePerSqFt": 2.5,
+      "corpusDue": 0
     },
     "5A": {
       "sqFt": 1918,
-      "ratePerSqFt": 2.5
+      "ratePerSqFt": 2.5,
+      "corpusDue": 0
     },
     "5B": {
       "sqFt": 1468,
-      "ratePerSqFt": 2.5
+      "ratePerSqFt": 2.5,
+      "corpusDue": 0
     },
     "5C": {
       "sqFt": 1480,
-      "ratePerSqFt": 2.5
+      "ratePerSqFt": 2.5,
+      "corpusDue": 0
     },
     "5D": {
       "sqFt": 1480,
-      "ratePerSqFt": 2.5
+      "ratePerSqFt": 2.5,
+      "corpusDue": 0
     },
     "5E": {
       "sqFt": 1660,
-      "ratePerSqFt": 2.5
+      "ratePerSqFt": 2.5,
+      "corpusDue": 0
     },
     "5F": {
       "sqFt": 1945,
-      "ratePerSqFt": 2.5
+      "ratePerSqFt": 2.5,
+      "corpusDue": 0
     },
     "5G": {
       "sqFt": 1945,
-      "ratePerSqFt": 2.5
+      "ratePerSqFt": 2.5,
+      "corpusDue": 0
     }
   }
 }

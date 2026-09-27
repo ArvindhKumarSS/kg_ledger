@@ -1,6 +1,49 @@
 /** GitHub API — read files and atomic multi-file commits */
 
+import {
+  ACCOUNT_CORPUS,
+  ACCOUNT_MAINTENANCE,
+  accountFilePaths,
+  emptyAccountSlice,
+  emptyBalance,
+} from './account.js';
+
 const API = 'https://api.github.com';
+
+async function loadAccountSlice(fetchJson, kind, apartments) {
+  const paths = accountFilePaths(kind);
+  const [expenditures, interest, pendingCredits, accountBalance] = await Promise.all([
+    fetchJson(paths.expenditures),
+    fetchJson(paths.interest),
+    fetchJson(paths.pendingCredits),
+    fetchJson(paths.accountBalance),
+  ]);
+
+  const slice = emptyAccountSlice(apartments);
+  slice.expenditures = expenditures || [];
+  slice.interest = interest || [];
+  slice.pendingCredits = pendingCredits || [];
+  slice.accountBalance = accountBalance || emptyBalance();
+
+  await Promise.all(
+    (apartments || []).map(async (apt) => {
+      slice.ledgers[apt] = (await fetchJson(paths.ledger(apt))) || [];
+    })
+  );
+  return slice;
+}
+
+function assembleData(config, accounts, maintenance, corpus, source) {
+  return {
+    config,
+    accounts,
+    maintenance,
+    corpus,
+    [ACCOUNT_MAINTENANCE]: maintenance,
+    [ACCOUNT_CORPUS]: corpus,
+    source,
+  };
+}
 
 export class GitHubClient {
   constructor(token, owner, repo) {
@@ -129,33 +172,13 @@ export class GitHubClient {
     if (!config) throw new Error('data/config.json missing from repository');
 
     const accounts = (await fetchJson('data/mappings/accounts.json')) || {};
-    const expenditures = (await fetchJson('data/expenditures.json')) || [];
-    const interest = (await fetchJson('data/interest.json')) || [];
-    const pendingCredits = (await fetchJson('data/pending-credits.json')) || [];
-    const accountBalance = (await fetchJson('data/account-balance.json')) || {
-      balance: null,
-      lastTransactionDate: null,
-      statementMonth: null,
-      updatedAt: null,
-    };
+    const apartments = config.apartments || [];
+    const [maintenance, corpus] = await Promise.all([
+      loadAccountSlice(fetchJson, ACCOUNT_MAINTENANCE, apartments),
+      loadAccountSlice(fetchJson, ACCOUNT_CORPUS, apartments),
+    ]);
 
-    const ledgers = {};
-    await Promise.all(
-      (config.apartments || []).map(async (apt) => {
-        ledgers[apt] = (await fetchJson(`data/ledgers/${apt}.json`)) || [];
-      })
-    );
-
-    return {
-      config,
-      accounts,
-      expenditures,
-      interest,
-      accountBalance,
-      ledgers,
-      pendingCredits,
-      source: 'github-api',
-    };
+    return assembleData(config, accounts, maintenance, corpus, 'github-api');
   }
 }
 
@@ -175,31 +198,11 @@ export async function loadAllData(baseUrl) {
   if (!config) throw new Error('Failed to load data/config.json');
 
   const accounts = (await fetchJson('data/mappings/accounts.json')) || {};
-  const expenditures = (await fetchJson('data/expenditures.json')) || [];
-  const interest = (await fetchJson('data/interest.json')) || [];
-  const pendingCredits = (await fetchJson('data/pending-credits.json')) || [];
-  const accountBalance = (await fetchJson('data/account-balance.json')) || {
-    balance: null,
-    lastTransactionDate: null,
-    statementMonth: null,
-    updatedAt: null,
-  };
+  const apartments = config.apartments || [];
+  const [maintenance, corpus] = await Promise.all([
+    loadAccountSlice(fetchJson, ACCOUNT_MAINTENANCE, apartments),
+    loadAccountSlice(fetchJson, ACCOUNT_CORPUS, apartments),
+  ]);
 
-  const ledgers = {};
-  await Promise.all(
-    (config.apartments || []).map(async (apt) => {
-      ledgers[apt] = (await fetchJson(`data/ledgers/${apt}.json`)) || [];
-    })
-  );
-
-  return {
-    config,
-    accounts,
-    expenditures,
-    interest,
-    accountBalance,
-    ledgers,
-    pendingCredits,
-    source: 'pages',
-  };
+  return assembleData(config, accounts, maintenance, corpus, 'pages');
 }

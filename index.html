@@ -3,20 +3,27 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>KG Srivatsa Garden — Maintenance Ledger</title>
+  <title>KG Srivatsa Garden — Association Ledger</title>
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
   <header>
     <div class="header-inner">
       <div class="header-title">
-        <h1 id="complex-name">KG Srivatsa Garden — Maintenance Ledger</h1>
-        <p>Upload monthly IOB bank statements · Auto-map payments to apartments</p>
+        <h1 id="complex-name">KG Srivatsa Garden — Association Ledger</h1>
+        <p>Upload IOB statements for maintenance and corpus accounts · Auto-map payments to apartments</p>
       </div>
-      <div class="account-balance" id="account-balance">
-        <div class="balance-label">Account balance</div>
-        <div class="balance-amount" id="balance-amount">—</div>
-        <div class="balance-footprint" id="balance-footprint">No statement uploaded yet</div>
+      <div class="account-switcher" id="account-switcher">
+        <button type="button" class="account-card active" data-account="maintenance" id="card-maintenance" aria-pressed="true">
+          <div class="balance-label">Maintenance</div>
+          <div class="balance-amount" id="maint-balance-amount">—</div>
+          <div class="balance-footprint" id="maint-balance-footprint">No statement uploaded yet</div>
+        </button>
+        <button type="button" class="account-card" data-account="corpus" id="card-corpus" aria-pressed="false">
+          <div class="balance-label">Corpus</div>
+          <div class="balance-amount" id="corpus-balance-amount">—</div>
+          <div class="balance-footprint" id="corpus-balance-footprint">No statement uploaded yet</div>
+        </button>
       </div>
     </div>
   </header>
@@ -32,8 +39,8 @@
     <!-- Upload panel -->
     <section id="panel-upload" class="panel active">
       <div id="pending-section" class="pending-section hidden">
-        <h2>Pending credits</h2>
-        <p class="muted pending-intro">
+        <h2 id="pending-heading">Pending credits</h2>
+        <p class="muted pending-intro" id="pending-intro">
           Untagged or skipped credits from previous uploads stay here until you assign an apartment and commit.
         </p>
         <div class="summary-grid" id="pending-summary"></div>
@@ -59,8 +66,18 @@
         </div>
       </div>
 
-      <h2>Upload Bank Statement</h2>
+      <h2 id="upload-heading">Upload Bank Statement</h2>
+      <p class="muted pending-intro" id="upload-account-note">
+        Importing into the <strong>maintenance</strong> account. Switch account with the header cards, or pick below.
+      </p>
       <div class="form-row">
+        <label>
+          Association account
+          <select id="upload-account">
+            <option value="maintenance">Maintenance (monthly dues)</option>
+            <option value="corpus">Corpus (one-time / capital, e.g. lift)</option>
+          </select>
+        </label>
         <label>
           Statement month <span class="muted">(optional — for your reference)</span>
           <input type="month" id="statement-month">
@@ -68,7 +85,7 @@
       </div>
       <div class="drop-zone" id="drop-zone">
         <input type="file" id="pdf-input" accept=".pdf">
-        <p>Drop IOB statement PDF here or click to browse</p>
+        <p id="drop-zone-label">Drop IOB maintenance statement PDF here or click to browse</p>
       </div>
       <div id="parse-status"></div>
       <div id="review-section" class="hidden">
@@ -78,7 +95,7 @@
           <ul id="warnings-list"></ul>
         </details>
 
-        <div class="section-title">Credits — maintenance payments</div>
+        <div class="section-title" id="credits-section-title">Credits — maintenance payments</div>
         <div class="table-wrap">
           <table id="credits-table">
             <thead>
@@ -128,10 +145,11 @@
 
     <!-- Transactions panel -->
     <section id="panel-transactions" class="panel">
-      <h2>All transactions</h2>
+        <h2 id="txn-heading">All transactions</h2>
       <p class="muted pending-intro">
-        Every unique committed transaction. Correct apartment tags on credits (or pending) and categories on debits, then save.
-        Changing an apartment moves <strong>only that transaction</strong> — other payments from the same payer stay where they are.
+        Every unique committed transaction for the selected account. Correct apartment tags on credits (or pending)
+        and categories on debits, then save. Changing an apartment moves <strong>only that transaction</strong> —
+        other payments from the same payer stay where they are.
       </p>
       <div class="form-row txn-filters">
         <label>
@@ -196,7 +214,10 @@
 
     <!-- Browse panel -->
     <section id="panel-browse" class="panel">
-      <h2>Browse Ledgers</h2>
+      <h2 id="browse-heading">Browse Ledgers</h2>
+      <p class="muted pending-intro" id="browse-account-note">
+        Viewing the maintenance account. Corpus is for one-time capital contributions, not monthly dues.
+      </p>
       <div class="form-row">
         <label>
           View
@@ -261,9 +282,25 @@
         <button class="btn btn-secondary" id="add-apt-btn">Add</button>
       </div>
 
-      <div class="section-title">Apartment area &amp; maintenance rate</div>
+      <div class="section-title">Bank account numbers</div>
       <p class="muted pending-intro">
-        Monthly due = Sq.Ft × Rate. Expected collection uses billing start through the latest statement date.
+        Optional. If you save the IOB A/C numbers, uploads auto-select maintenance vs corpus from the PDF.
+      </p>
+      <div class="form-row">
+        <label>
+          Maintenance A/C no.
+          <input type="text" id="maint-account-number" placeholder="e.g. 1234567890" autocomplete="off">
+        </label>
+        <label>
+          Corpus A/C no.
+          <input type="text" id="corpus-account-number" placeholder="e.g. 0987654321" autocomplete="off">
+        </label>
+      </div>
+
+      <div class="section-title">Apartment area, maintenance rate &amp; corpus due</div>
+      <p class="muted pending-intro">
+        Monthly maintenance due = Sq.Ft × Rate. Expected collection uses billing start through the latest
+        <strong>maintenance</strong> statement date. Corpus due is a one-time contribution (lift, capital works) — not billed monthly.
       </p>
       <div class="form-row">
         <label>
@@ -279,13 +316,14 @@
               <th>Sq.Ft</th>
               <th>Rate (₹ / Sq.Ft)</th>
               <th>Monthly due</th>
+              <th>Corpus due (₹)</th>
             </tr>
           </thead>
           <tbody id="apt-rates-tbody"></tbody>
         </table>
       </div>
 
-      <div class="section-title">Expense categories</div>
+      <div class="section-title">Maintenance expense categories</div>
       <div class="tag-list" id="cat-tags"></div>
       <div class="form-row">
         <label>
@@ -293,6 +331,16 @@
           <input type="text" id="new-cat" placeholder="e.g. Plumbing">
         </label>
         <button class="btn btn-secondary" id="add-cat-btn">Add category</button>
+      </div>
+
+      <div class="section-title">Corpus expense categories</div>
+      <div class="tag-list" id="corpus-cat-tags"></div>
+      <div class="form-row">
+        <label>
+          Add corpus category
+          <input type="text" id="new-corpus-cat" placeholder="e.g. Lift">
+        </label>
+        <button class="btn btn-secondary" id="add-corpus-cat-btn">Add corpus category</button>
         <button class="btn" id="save-config-btn">Save config to GitHub</button>
       </div>
       <div id="settings-status"></div>
