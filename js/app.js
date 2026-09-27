@@ -1172,29 +1172,28 @@ function renderAptDues(apt) {
   const view = activeView();
   if (state.accountKind === ACCOUNT_CORPUS) {
     const dues = computeCorpusDues(apt, view);
+    if (!dues.expected) {
+      panel.classList.remove('hidden');
+      grid.innerHTML = `
+        <div class="summary-card"><div class="num">${dues.sqFt ? dues.sqFt.toLocaleString('en-IN') : '—'}</div><div class="lbl">Sq.Ft</div></div>
+        <div class="summary-card"><div class="num">—</div><div class="lbl">Corpus due</div></div>
+        <div class="summary-card"><div class="num">₹ ${formatAmount(dues.collected)}</div><div class="lbl">Collected</div></div>
+      `;
+      note.textContent = 'Set a one-time corpus due for this apartment in Settings to see expected vs collected.';
+      return;
+    }
     const deficitClass =
-      dues.expected && dues.deficit > 0.009
-        ? 'deficit'
-        : dues.expected && dues.deficit < -0.009
-          ? 'surplus'
-          : '';
-    const deficitLabel = !dues.expected
-      ? 'Collected'
-      : dues.deficit > 0.009
-        ? 'Deficit'
-        : dues.deficit < -0.009
-          ? 'Surplus'
-          : 'Balanced';
+      dues.deficit > 0.009 ? 'deficit' : dues.deficit < -0.009 ? 'surplus' : '';
+    const deficitLabel =
+      dues.deficit > 0.009 ? 'Deficit' : dues.deficit < -0.009 ? 'Surplus' : 'Balanced';
     panel.classList.remove('hidden');
     grid.innerHTML = `
       <div class="summary-card"><div class="num">${dues.sqFt ? dues.sqFt.toLocaleString('en-IN') : '—'}</div><div class="lbl">Sq.Ft</div></div>
-      <div class="summary-card"><div class="num">${dues.expected ? `₹ ${formatAmount(dues.expected)}` : '—'}</div><div class="lbl">Corpus due</div></div>
+      <div class="summary-card"><div class="num">₹ ${formatAmount(dues.expected)}</div><div class="lbl">Corpus due</div></div>
       <div class="summary-card"><div class="num">₹ ${formatAmount(dues.collected)}</div><div class="lbl">Collected</div></div>
-      <div class="summary-card ${deficitClass}"><div class="num">₹ ${formatAmount(dues.expected ? Math.abs(dues.deficit) : dues.collected)}</div><div class="lbl">${deficitLabel}</div></div>
+      <div class="summary-card ${deficitClass}"><div class="num">₹ ${formatAmount(Math.abs(dues.deficit))}</div><div class="lbl">${deficitLabel}</div></div>
     `;
-    note.textContent = dues.expected
-      ? 'Corpus due is a one-time contribution (not monthly). Set the amount in Settings.'
-      : 'Set a one-time corpus due for this apartment in Settings to see expected vs collected.';
+    note.textContent = 'Corpus due is a one-time contribution (not monthly). Set the amount in Settings.';
     return;
   }
 
