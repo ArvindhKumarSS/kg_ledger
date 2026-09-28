@@ -1,1 +1,18 @@
-[]
+[
+  {
+    "date": "2026-08-01",
+    "creditAmount": 3525,
+    "details": "IMPS/621318635305/J MICHA/SBIN/XXXXXX3811/1EMai",
+    "sourceUpload": "2026-09-28T04-18-18-733Z",
+    "txnId": "ff10aa817aaa8c27",
+    "mappingKey": "j micha sbin"
+  },
+  {
+    "date": "2026-08-30",
+    "creditAmount": 3525,
+    "details": "IMPS/624211956259/J MICHA/SBIN/XXXXXX3811/1E Ma",
+    "sourceUpload": "2026-09-28T04-18-18-733Z",
+    "txnId": "2cbd41a38a37fb1f",
+    "mappingKey": "j micha sbin"
+  }
+]

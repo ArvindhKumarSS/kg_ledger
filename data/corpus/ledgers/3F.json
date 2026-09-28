@@ -1,1 +1,18 @@
-[]
+[
+  {
+    "date": "2026-08-01",
+    "creditAmount": 4238,
+    "details": "IMPS/621310659040/Vijayak/SBIN/XXXXXX0961/Augus",
+    "sourceUpload": "2026-09-28T04-18-18-733Z",
+    "txnId": "3b71ea18ff61c658",
+    "mappingKey": "vijayak sbin"
+  },
+  {
+    "date": "2026-09-01",
+    "creditAmount": 4238,
+    "details": "IMPS/624415868611/Vijayak/SBIN/XXXXXX0961/Maint",
+    "sourceUpload": "2026-09-28T04-18-18-733Z",
+    "txnId": "036adf7db276ed80",
+    "mappingKey": "vijayak sbin"
+  }
+]

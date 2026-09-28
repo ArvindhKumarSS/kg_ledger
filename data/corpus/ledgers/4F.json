@@ -1,1 +1,10 @@
-[]
+[
+  {
+    "date": "2026-08-22",
+    "creditAmount": 4238,
+    "details": "NEFT-KKBK-KKBKH26234988077-JEHANBUX A-PAYMENT",
+    "sourceUpload": "2026-09-28T04-18-18-733Z",
+    "txnId": "0974f08c5e7c36c5",
+    "mappingKey": "jehanbux a payment"
+  }
+]

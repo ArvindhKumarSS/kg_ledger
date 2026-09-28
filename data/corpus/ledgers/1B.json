@@ -1,1 +1,26 @@
-[]
+[
+  {
+    "date": "2026-08-13",
+    "creditAmount": 2900,
+    "details": "UPI/622527846437/CR/MANGALA KUMAR /SBI/AUGUST 20",
+    "sourceUpload": "2026-09-28T04-18-18-733Z",
+    "txnId": "f2086c70a1728001",
+    "mappingKey": "mangala kumar"
+  },
+  {
+    "date": "2026-09-04",
+    "creditAmount": 2900,
+    "details": "UPI/624785916698/CR/MANGALA KUMAR /SBI/MAINTENAN",
+    "sourceUpload": "2026-09-28T04-18-18-733Z",
+    "txnId": "8225ef882852e45e",
+    "mappingKey": "mangala kumar"
+  },
+  {
+    "date": "2026-09-04",
+    "creditAmount": 32000,
+    "details": "UPI/661341047036/CR/Mr R S MANGALA/IDI/UPI",
+    "sourceUpload": "2026-09-28T04-18-18-733Z",
+    "txnId": "8989c36ffa10be79",
+    "mappingKey": "mr r s mangala"
+  }
+]

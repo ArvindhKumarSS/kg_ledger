@@ -1,1 +1,18 @@
-[]
+[
+  {
+    "date": "2026-09-05",
+    "creditAmount": 32000,
+    "details": "IMPS/624808683907/LALITHA/ICIC/XXXXXX6363/IMPS",
+    "sourceUpload": "2026-09-28T04-18-18-733Z",
+    "txnId": "a09293fc0fbd6420",
+    "mappingKey": "lalitha icic"
+  },
+  {
+    "date": "2026-09-08",
+    "creditAmount": 4025,
+    "details": "IMPS/625111467976/LALITHA/ICIC/XXXXXX6363/Sep20",
+    "sourceUpload": "2026-09-28T04-18-18-733Z",
+    "txnId": "eb9927060fea9bc8",
+    "mappingKey": "lalitha icic"
+  }
+]

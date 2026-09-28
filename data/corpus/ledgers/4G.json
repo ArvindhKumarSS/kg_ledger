@@ -1,1 +1,18 @@
-[]
+[
+  {
+    "date": "2026-08-08",
+    "creditAmount": 4238,
+    "details": "IMPS/622014464120/ABHISHE/ICIC/XXXXXX3097/IMPS",
+    "sourceUpload": "2026-09-28T04-18-18-733Z",
+    "txnId": "09430be3b5604092",
+    "mappingKey": "abhishe icic"
+  },
+  {
+    "date": "2026-09-05",
+    "creditAmount": 4238,
+    "details": "NEFT-ICIC-IN12624854289830-ABHISHEK P",
+    "sourceUpload": "2026-09-28T04-18-18-733Z",
+    "txnId": "c4aa68d780eeb928",
+    "mappingKey": "abhishek p"
+  }
+]

@@ -1,1 +1,122 @@
-[]
+[
+  {
+    "date": "2026-08-04",
+    "debitAmount": 6000,
+    "details": "SAMMANASU MARY",
+    "category": "",
+    "sourceUpload": "2026-09-28T04-18-18-733Z",
+    "txnId": "82aa45c65b7042e1"
+  },
+  {
+    "date": "2026-08-04",
+    "debitAmount": 6000,
+    "details": "KUMARI",
+    "category": "",
+    "sourceUpload": "2026-09-28T04-18-18-733Z",
+    "txnId": "1b24dfcd6ab4d2be"
+  },
+  {
+    "date": "2026-08-05",
+    "debitAmount": 6000,
+    "details": "TO CASH THANA MARY",
+    "category": "Salaries",
+    "sourceUpload": "2026-09-28T04-18-18-733Z",
+    "txnId": "c79744ec9d6194e1"
+  },
+  {
+    "date": "2026-08-11",
+    "debitAmount": 70600,
+    "details": "RHINO SENTINEL AND ALLIE",
+    "category": "Security",
+    "sourceUpload": "2026-09-28T04-18-18-733Z",
+    "txnId": "e4845573b08dbf26"
+  },
+  {
+    "date": "2026-08-17",
+    "debitAmount": 10000,
+    "details": "S RAGHU",
+    "category": "",
+    "sourceUpload": "2026-09-28T04-18-18-733Z",
+    "txnId": "64a7ece32789b0b5"
+  },
+  {
+    "date": "2026-08-25",
+    "debitAmount": 50000,
+    "details": "K G SRIVATHSA GARDEN CORPUS FUND",
+    "category": "",
+    "sourceUpload": "2026-09-28T04-18-18-733Z",
+    "txnId": "67d9c0213fece448"
+  },
+  {
+    "date": "2026-08-27",
+    "debitAmount": 111612,
+    "details": "ARVINDH KUMAR S S",
+    "category": "",
+    "sourceUpload": "2026-09-28T04-18-18-733Z",
+    "txnId": "8ff2ae86f3c518ae"
+  },
+  {
+    "date": "2026-08-29",
+    "debitAmount": 2543,
+    "details": "STALIN SUNDARSINGH",
+    "category": "",
+    "sourceUpload": "2026-09-28T04-18-18-733Z",
+    "txnId": "4a98cc061e7614c1"
+  },
+  {
+    "date": "2026-08-31",
+    "debitAmount": 7700,
+    "details": "GENERATOR CARE",
+    "category": "Generator",
+    "sourceUpload": "2026-09-28T04-18-18-733Z",
+    "txnId": "7c02ce4fe4607c50"
+  },
+  {
+    "date": "2026-09-01",
+    "debitAmount": 6000,
+    "details": "TO CASH MAGESWARI C",
+    "category": "Salaries",
+    "sourceUpload": "2026-09-28T04-18-18-733Z",
+    "txnId": "8b5bc9134a6ad003"
+  },
+  {
+    "date": "2026-09-01",
+    "debitAmount": 6000,
+    "details": "TO CASH THANA MARY",
+    "category": "Salaries",
+    "sourceUpload": "2026-09-28T04-18-18-733Z",
+    "txnId": "7630a58206a3b147"
+  },
+  {
+    "date": "2026-09-01",
+    "debitAmount": 6000,
+    "details": "TO CASH KUMARI",
+    "category": "Salaries",
+    "sourceUpload": "2026-09-28T04-18-18-733Z",
+    "txnId": "087d2b093ea49859"
+  },
+  {
+    "date": "2026-09-02",
+    "debitAmount": 6000,
+    "details": "TO CASH SAMMANASU MARY",
+    "category": "Salaries",
+    "sourceUpload": "2026-09-28T04-18-18-733Z",
+    "txnId": "05438c5f172999ce"
+  },
+  {
+    "date": "2026-09-04",
+    "debitAmount": 70200,
+    "details": "RHINO SENTINEL AND ALLIE",
+    "category": "Security",
+    "sourceUpload": "2026-09-28T04-18-18-733Z",
+    "txnId": "bcb5d4ed7e355ee4"
+  },
+  {
+    "date": "2026-09-15",
+    "debitAmount": 2920,
+    "details": "PRAJUSH V",
+    "category": "",
+    "sourceUpload": "2026-09-28T04-18-18-733Z",
+    "txnId": "ac520362959362d6"
+  }
+]

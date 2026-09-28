@@ -1,1 +1,18 @@
-[]
+[
+  {
+    "date": "2026-08-04",
+    "creditAmount": 3000,
+    "details": "UPI/621643901753/CR/SRIRAM KUMAR M/ICI/Kgs 2D",
+    "sourceUpload": "2026-09-28T04-18-18-733Z",
+    "txnId": "bc2eda93f5050065",
+    "mappingKey": "sriram kumar m"
+  },
+  {
+    "date": "2026-09-06",
+    "creditAmount": 3000,
+    "details": "UPI/624909237359/CR/SRIRAM KUMAR M/ICI/Kgs 2D",
+    "sourceUpload": "2026-09-28T04-18-18-733Z",
+    "txnId": "4ae591f17781ac7d",
+    "mappingKey": "sriram kumar m"
+  }
+]

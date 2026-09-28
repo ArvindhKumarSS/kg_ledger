@@ -1,1 +1,18 @@
-[]
+[
+  {
+    "date": "2026-08-02",
+    "creditAmount": 3525,
+    "details": "IMPS/621420738958/RAMESH /ICIC/XXXXXX9284/Rames",
+    "sourceUpload": "2026-09-28T04-18-18-733Z",
+    "txnId": "296c1ae36c356e7e",
+    "mappingKey": "ramesh icic"
+  },
+  {
+    "date": "2026-09-02",
+    "creditAmount": 3525,
+    "details": "IMPS/624520625674/RAMESH /ICIC/XXXXXX9284/Rames",
+    "sourceUpload": "2026-09-28T04-18-18-733Z",
+    "txnId": "1d637ea76ad75b48",
+    "mappingKey": "ramesh icic"
+  }
+]

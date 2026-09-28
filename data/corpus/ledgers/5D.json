@@ -1,1 +1,18 @@
-[]
+[
+  {
+    "date": "2026-08-05",
+    "creditAmount": 3700,
+    "details": "NEFT-HDFC-HDFCH01170734368-KUMAR RAMA-0001",
+    "sourceUpload": "2026-09-28T04-18-18-733Z",
+    "txnId": "9575ce03cb85f707",
+    "mappingKey": "kumar rama"
+  },
+  {
+    "date": "2026-09-05",
+    "creditAmount": 3700,
+    "details": "NEFT-HDFC-HDFCH01240293445-KUMAR RAMA-0001",
+    "sourceUpload": "2026-09-28T04-18-18-733Z",
+    "txnId": "0be71f96d9b48c7e",
+    "mappingKey": "kumar rama"
+  }
+]

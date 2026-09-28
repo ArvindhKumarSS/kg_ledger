@@ -1,1 +1,26 @@
-[]
+[
+  {
+    "date": "2026-08-20",
+    "creditAmount": 6000,
+    "details": "NEFT-HDFC-HDFCH01207228836-CHARLES V -0001",
+    "sourceUpload": "2026-09-28T04-18-18-733Z",
+    "txnId": "c5c781a89f972f62",
+    "mappingKey": "charles v"
+  },
+  {
+    "date": "2026-09-05",
+    "creditAmount": 3000,
+    "details": "NEFT-HDFC-HDFCH01242313302-CHARLES V -0001",
+    "sourceUpload": "2026-09-28T04-18-18-733Z",
+    "txnId": "e78afed41c62dcfd",
+    "mappingKey": "charles v"
+  },
+  {
+    "date": "2026-09-06",
+    "creditAmount": 33000,
+    "details": "NEFT-HDFC-HDFCH01243488859-CHARLES V -0001",
+    "sourceUpload": "2026-09-28T04-18-18-733Z",
+    "txnId": "1e42c2eb8a83965f",
+    "mappingKey": "charles v"
+  }
+]

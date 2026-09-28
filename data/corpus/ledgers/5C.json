@@ -1,1 +1,18 @@
-[]
+[
+  {
+    "date": "2026-08-12",
+    "creditAmount": 7400,
+    "details": "IMPS/622459198676/SATHYAP/HDFC/XXXXXX7781/5C Ju",
+    "sourceUpload": "2026-09-28T04-18-18-733Z",
+    "txnId": "19a3312aa502375c",
+    "mappingKey": "sathyap hdfc"
+  },
+  {
+    "date": "2026-09-09",
+    "creditAmount": 3700,
+    "details": "IMPS/625236557940/SATHYAP/HDFC/XXXXXX4312/KG 5C",
+    "sourceUpload": "2026-09-28T04-18-18-733Z",
+    "txnId": "340ac8f6a5f11bed",
+    "mappingKey": "sathyap hdfc"
+  }
+]

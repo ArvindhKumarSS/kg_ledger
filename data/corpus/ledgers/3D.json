@@ -1,1 +1,18 @@
-[]
+[
+  {
+    "date": "2026-08-01",
+    "creditAmount": 3000,
+    "details": "MB/621318298998/XXXXXX3171/K SSREEDHA Maint Au",
+    "sourceUpload": "2026-09-28T04-18-18-733Z",
+    "txnId": "6aa69369e4ee5273",
+    "mappingKey": "k ssreedha"
+  },
+  {
+    "date": "2026-09-01",
+    "creditAmount": 3000,
+    "details": "MB/624419722786/XXXXXX3171/K SSREEDHA Maint Se",
+    "sourceUpload": "2026-09-28T04-18-18-733Z",
+    "txnId": "1f896825d587d1a8",
+    "mappingKey": "k ssreedha"
+  }
+]

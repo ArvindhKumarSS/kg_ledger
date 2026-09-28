@@ -1,1 +1,18 @@
-[]
+[
+  {
+    "date": "2026-08-04",
+    "creditAmount": 4238,
+    "details": "By T K ARUN",
+    "sourceUpload": "2026-09-28T04-18-18-733Z",
+    "txnId": "57ab824a0955c779",
+    "mappingKey": "t k arun"
+  },
+  {
+    "date": "2026-09-04",
+    "creditAmount": 4238,
+    "details": "By T K ARUN",
+    "sourceUpload": "2026-09-28T04-18-18-733Z",
+    "txnId": "0cf49c526299245b",
+    "mappingKey": "t k arun"
+  }
+]

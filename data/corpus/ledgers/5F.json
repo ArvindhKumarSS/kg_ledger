@@ -1,1 +1,18 @@
-[]
+[
+  {
+    "date": "2026-08-25",
+    "creditAmount": 4863,
+    "details": "JAMIL AHMED",
+    "sourceUpload": "2026-09-28T04-18-18-733Z",
+    "txnId": "3b05a834f5fa1dfb",
+    "mappingKey": "jamil ahmed"
+  },
+  {
+    "date": "2026-08-31",
+    "creditAmount": 4863,
+    "details": "MAHJABEEN AHMED",
+    "sourceUpload": "2026-09-28T04-18-18-733Z",
+    "txnId": "51185025178f62fb",
+    "mappingKey": "mahjabeen ahmed"
+  }
+]

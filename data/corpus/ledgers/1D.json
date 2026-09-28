@@ -1,1 +1,18 @@
-[]
+[
+  {
+    "date": "2026-08-01",
+    "creditAmount": 3000,
+    "details": "IMPS/621309969386/CHENTHI/FDRL/XXXXXX1910/KG SR",
+    "sourceUpload": "2026-09-28T04-18-18-733Z",
+    "txnId": "b40138663d81645c",
+    "mappingKey": "chenthi fdrl"
+  },
+  {
+    "date": "2026-09-01",
+    "creditAmount": 3000,
+    "details": "IMPS/624412275653/CHENTHI/FDRL/XXXXXX1910/KG SR",
+    "sourceUpload": "2026-09-28T04-18-18-733Z",
+    "txnId": "675c6a416c9fe1f0",
+    "mappingKey": "chenthi fdrl"
+  }
+]
