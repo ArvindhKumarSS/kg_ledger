@@ -30,5 +30,13 @@
     "sourceUpload": "2026-09-28T04-18-18-733Z",
     "txnId": "e48664486f1eafa0",
     "mappingKey": "shankar icic"
+  },
+  {
+    "date": "2026-09-06",
+    "creditAmount": 32000,
+    "details": "IMPS/624912941825/SHANKAR/ICIC/XXXXXX9845/from5",
+    "sourceUpload": "2026-09-28T04-19-33-423Z",
+    "txnId": "49ee60c0ca7c5ddc",
+    "mappingKey": "shankar icic"
   }
 ]

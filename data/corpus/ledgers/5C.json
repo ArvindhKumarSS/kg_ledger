@@ -14,5 +14,13 @@
     "sourceUpload": "2026-09-28T04-18-18-733Z",
     "txnId": "340ac8f6a5f11bed",
     "mappingKey": "sathyap hdfc"
+  },
+  {
+    "date": "2026-09-10",
+    "creditAmount": 32000,
+    "details": "IMPS/625337054177/SATHYAP/HDFC/XXXXXX7781/5C KG",
+    "sourceUpload": "2026-09-28T04-19-33-423Z",
+    "txnId": "1412c96828879b3f",
+    "mappingKey": "sathyap hdfc"
   }
 ]

@@ -1,0 +1,25 @@
+{
+  "uploadedAt": "2026-09-28T04:19:38.612Z",
+  "uploadId": "2026-09-28T04-19-33-423Z",
+  "statementMonth": null,
+  "fileName": "11359.pdf",
+  "accountKind": "corpus",
+  "accountNumber": "164301000011359",
+  "transactionCount": 11,
+  "importedTxnIds": [
+    "655a82a8f356c1c3",
+    "f8f7d269ddf7c0f1",
+    "e80a6d5e83b06429",
+    "4332c4cbac9ff45c",
+    "2c3a72a201f7c453",
+    "49ee60c0ca7c5ddc",
+    "33c0a4ed37dac950",
+    "01e6ca229acd4bb9",
+    "cdc28024bef7c49c",
+    "1412c96828879b3f",
+    "cd6eeeddd01aca04"
+  ],
+  "skippedDuplicates": 0,
+  "pendingCreditsAdded": 11,
+  "pendingCreditsTotal": 16
+}

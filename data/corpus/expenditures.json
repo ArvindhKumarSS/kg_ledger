@@ -118,5 +118,13 @@
     "category": "",
     "sourceUpload": "2026-09-28T04-18-18-733Z",
     "txnId": "ac520362959362d6"
+  },
+  {
+    "date": "2026-08-12",
+    "debitAmount": 120000,
+    "details": "K G SRIVATSA GARDEN APT OWNERS ASSN",
+    "category": "",
+    "sourceUpload": "2026-09-28T04-19-33-423Z",
+    "txnId": "f8f7d269ddf7c0f1"
   }
 ]

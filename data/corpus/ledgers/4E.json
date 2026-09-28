@@ -1,1 +1,10 @@
-[]
+[
+  {
+    "date": "2026-09-05",
+    "creditAmount": 32000,
+    "details": "MB/624817162915/XXXXXX2980/ARASU ST /4E Arasu fo",
+    "sourceUpload": "2026-09-28T04-19-33-423Z",
+    "txnId": "2c3a72a201f7c453",
+    "mappingKey": "arasu st 4e arasu fo"
+  }
+]
