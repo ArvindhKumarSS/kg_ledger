@@ -45,21 +45,6 @@
     "addedAt": "2026-08-19T12:38:32.827Z"
   },
   {
-    "txnId": "b09ff1255610b1f3",
-    "date": "2026-03-20",
-    "creditAmount": 50811,
-    "details": "NEFT-IDIB-IDIBH07934605008-PRANAV CON-//ATTN",
-    "chequeNumber": "",
-    "mappingKey": "pranav con attn",
-    "txnType": "credit",
-    "sourceUpload": "2026-08-19T12-38-31-791Z",
-    "fileName": "3443 JUNE.pdf",
-    "skipped": false,
-    "apartment": null,
-    "needsReview": true,
-    "addedAt": "2026-08-19T12:38:32.827Z"
-  },
-  {
     "txnId": "96c91518b26e43ac",
     "date": "2026-03-31",
     "creditAmount": 4238,
