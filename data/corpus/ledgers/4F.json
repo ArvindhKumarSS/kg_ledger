@@ -6,5 +6,13 @@
     "sourceUpload": "2026-09-28T04-18-18-733Z",
     "txnId": "0974f08c5e7c36c5",
     "mappingKey": "jehanbux a payment"
+  },
+  {
+    "date": "2026-09-07",
+    "creditAmount": 32000,
+    "details": "IMPS/625012995806/AMROLIA/SBIN/XXXXXX9559/Build",
+    "sourceUpload": "2026-09-28T04-19-33-423Z",
+    "txnId": "64861d4f7556e14e",
+    "mappingKey": "amrolia sbin"
   }
 ]

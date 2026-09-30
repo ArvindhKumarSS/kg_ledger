@@ -6,5 +6,13 @@
     "sourceUpload": "2026-09-28T04-18-18-733Z",
     "txnId": "e480b2f0504dee4c",
     "mappingKey": "david j icic"
+  },
+  {
+    "date": "2026-09-08",
+    "creditAmount": 32000,
+    "details": "IMPS/625114857210/MALA JO/SBIN/XXXXXX6885/Bill",
+    "sourceUpload": "2026-09-28T04-19-33-423Z",
+    "txnId": "d3e217dfb4895414",
+    "mappingKey": "mala jo sbin"
   }
 ]

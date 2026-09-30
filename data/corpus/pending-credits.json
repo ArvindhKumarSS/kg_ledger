@@ -15,21 +15,6 @@
     "addedAt": "2026-09-28T04:18:26.318Z"
   },
   {
-    "txnId": "5fbe78dda5829b88",
-    "date": "2026-08-25",
-    "creditAmount": 50000,
-    "details": "KG SRIVATSA GARDEN OWNERS ASSN",
-    "chequeNumber": "",
-    "mappingKey": "kg srivatsa garden owners assn",
-    "txnType": "credit",
-    "sourceUpload": "2026-09-28T04-19-33-423Z",
-    "fileName": "11359.pdf",
-    "skipped": false,
-    "apartment": null,
-    "needsReview": true,
-    "addedAt": "2026-09-28T04:19:38.611Z"
-  },
-  {
     "txnId": "82c069f7ed6f9a69",
     "date": "2026-09-03",
     "creditAmount": 32000,
@@ -75,42 +60,12 @@
     "addedAt": "2026-09-28T04:19:38.611Z"
   },
   {
-    "txnId": "64861d4f7556e14e",
-    "date": "2026-09-07",
-    "creditAmount": 32000,
-    "details": "IMPS/625012995806/AMROLIA/SBIN/XXXXXX9559/Build",
-    "chequeNumber": "",
-    "mappingKey": "amrolia sbin",
-    "txnType": "credit",
-    "sourceUpload": "2026-09-28T04-19-33-423Z",
-    "fileName": "11359.pdf",
-    "skipped": false,
-    "apartment": null,
-    "needsReview": true,
-    "addedAt": "2026-09-28T04:19:38.611Z"
-  },
-  {
     "txnId": "edfb472db557c2ee",
     "date": "2026-09-07",
     "creditAmount": 32000,
     "details": "UPI/625097669908/CR/RANGANATHAN K/SBI/1st insta",
     "chequeNumber": "",
     "mappingKey": "ranganathan k",
-    "txnType": "credit",
-    "sourceUpload": "2026-09-28T04-19-33-423Z",
-    "fileName": "11359.pdf",
-    "skipped": false,
-    "apartment": null,
-    "needsReview": true,
-    "addedAt": "2026-09-28T04:19:38.611Z"
-  },
-  {
-    "txnId": "d3e217dfb4895414",
-    "date": "2026-09-08",
-    "creditAmount": 32000,
-    "details": "IMPS/625114857210/MALA JO/SBIN/XXXXXX6885/Bill",
-    "chequeNumber": "",
-    "mappingKey": "mala jo sbin",
     "txnType": "credit",
     "sourceUpload": "2026-09-28T04-19-33-423Z",
     "fileName": "11359.pdf",
@@ -148,21 +103,6 @@
     "apartment": null,
     "needsReview": true,
     "addedAt": "2026-09-28T04:18:26.318Z"
-  },
-  {
-    "txnId": "2abf273e26f3c942",
-    "date": "2026-09-10",
-    "creditAmount": 32000,
-    "details": "NEFT-UTIB-AXOMB25302132278-MOHAMMED Z-OTHERS-LIF",
-    "chequeNumber": "",
-    "mappingKey": "mohammed z others lif",
-    "txnType": "credit",
-    "sourceUpload": "2026-09-28T04-19-33-423Z",
-    "fileName": "11359.pdf",
-    "skipped": false,
-    "apartment": null,
-    "needsReview": true,
-    "addedAt": "2026-09-28T04:19:38.611Z"
   },
   {
     "txnId": "a0ab62fdcbb4b446",
