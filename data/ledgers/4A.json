@@ -46,5 +46,13 @@
     "sourceUpload": "2026-08-19T12-38-31-791Z",
     "txnId": "f58124bf3859d4bf",
     "mappingKey": "arvindh ku"
+  },
+  {
+    "date": "2026-10-01",
+    "creditAmount": 4025,
+    "details": "NEFT-HDFC-HDFCH01295107101-ARVINDH KU-0001",
+    "sourceUpload": "2026-10-07T04-14-56-759Z",
+    "txnId": "5c385c2bb79dc599",
+    "mappingKey": "arvindh ku"
   }
 ]

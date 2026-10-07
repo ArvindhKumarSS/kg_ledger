@@ -542,5 +542,45 @@
     "category": "",
     "sourceUpload": "2026-08-19T12-38-31-791Z",
     "txnId": "44517b6bf63652e8"
+  },
+  {
+    "date": "2026-09-15",
+    "debitAmount": 2920,
+    "details": "PRAJUSH V",
+    "category": "",
+    "sourceUpload": "2026-10-07T04-14-56-759Z",
+    "txnId": "5fb33f40c791ad81"
+  },
+  {
+    "date": "2026-10-01",
+    "debitAmount": 5806,
+    "details": "TO CASH THANA MARY",
+    "category": "Salaries",
+    "sourceUpload": "2026-10-07T04-14-56-759Z",
+    "txnId": "95535c096a984bd9"
+  },
+  {
+    "date": "2026-10-01",
+    "debitAmount": 5613,
+    "details": "TO CASH MAGESWARI",
+    "category": "Salaries",
+    "sourceUpload": "2026-10-07T04-14-56-759Z",
+    "txnId": "ed01d80b57892583"
+  },
+  {
+    "date": "2026-10-01",
+    "debitAmount": 5613,
+    "details": "TO CASH KUMARI",
+    "category": "Salaries",
+    "sourceUpload": "2026-10-07T04-14-56-759Z",
+    "txnId": "32dd32bbf727857d"
+  },
+  {
+    "date": "2026-10-06",
+    "debitAmount": 69421,
+    "details": "RHINO SENTINEL AND ALLIE",
+    "category": "Security",
+    "sourceUpload": "2026-10-07T04-14-56-759Z",
+    "txnId": "f86a840026e17059"
   }
 ]
