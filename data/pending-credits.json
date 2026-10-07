@@ -30,21 +30,6 @@
     "addedAt": "2026-08-19T12:38:32.827Z"
   },
   {
-    "txnId": "a16f5ce3c1e359ba",
-    "date": "2026-03-07",
-    "creditAmount": 3525,
-    "details": "By CAPT S SRINIVASANPADMA-NET@288060",
-    "chequeNumber": "",
-    "mappingKey": "capt s srinivasanpadma net@288060",
-    "txnType": "credit",
-    "sourceUpload": "2026-08-19T12-38-31-791Z",
-    "fileName": "3443 JUNE.pdf",
-    "skipped": false,
-    "apartment": null,
-    "needsReview": true,
-    "addedAt": "2026-08-19T12:38:32.827Z"
-  },
-  {
     "txnId": "96c91518b26e43ac",
     "date": "2026-03-31",
     "creditAmount": 4238,
