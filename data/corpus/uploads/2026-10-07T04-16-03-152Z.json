@@ -1,0 +1,15 @@
+{
+  "uploadedAt": "2026-10-07T04:16:06.363Z",
+  "uploadId": "2026-10-07T04-16-03-152Z",
+  "statementMonth": null,
+  "fileName": "SB11359 STT.pdf",
+  "accountKind": "corpus",
+  "accountNumber": "164301000011359",
+  "transactionCount": 1,
+  "importedTxnIds": [
+    "5fe1b0ed136a5333"
+  ],
+  "skippedDuplicates": 0,
+  "pendingCreditsAdded": 4,
+  "pendingCreditsTotal": 16
+}
