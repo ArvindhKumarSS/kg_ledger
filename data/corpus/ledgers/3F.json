@@ -14,5 +14,13 @@
     "sourceUpload": "2026-09-28T04-18-18-733Z",
     "txnId": "036adf7db276ed80",
     "mappingKey": "vijayak sbin"
+  },
+  {
+    "date": "2026-09-10",
+    "creditAmount": 30000,
+    "details": "IMPS/625312980337/ALIMA/UBIN/XXXXXX9018/IMPS",
+    "sourceUpload": "2026-09-28T04-19-33-423Z",
+    "txnId": "a0ab62fdcbb4b446",
+    "mappingKey": "alima ubin"
   }
 ]

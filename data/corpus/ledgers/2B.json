@@ -14,5 +14,13 @@
     "sourceUpload": "2026-09-28T04-18-18-733Z",
     "txnId": "ea08b3f3378ae0dc",
     "mappingKey": "g sijumone"
+  },
+  {
+    "date": "2026-09-07",
+    "creditAmount": 32000,
+    "details": "UPI/625097669908/CR/RANGANATHAN K/SBI/1st insta",
+    "sourceUpload": "2026-09-28T04-19-33-423Z",
+    "txnId": "edfb472db557c2ee",
+    "mappingKey": "ranganathan k"
   }
 ]

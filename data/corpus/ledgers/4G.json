@@ -8,6 +8,14 @@
     "mappingKey": "abhishe icic"
   },
   {
+    "date": "2026-09-03",
+    "creditAmount": 32000,
+    "details": "IMPS/624602168989/SUBRAMA/KKBK/XXXXXX5166/KKBKT",
+    "sourceUpload": "2026-09-28T04-19-33-423Z",
+    "txnId": "db4bb4bc37e98d07",
+    "mappingKey": "subrama kkbk"
+  },
+  {
     "date": "2026-09-05",
     "creditAmount": 4238,
     "details": "NEFT-ICIC-IN12624854289830-ABHISHEK P",
